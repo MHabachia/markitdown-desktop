@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { escapeHtml } from '../utils/format';
 import { shortcut } from '../utils/platform';
+import { IS_DESKTOP, pickExportTarget } from '../utils/desktop';
 import { blockLinkNavigation, renderMarkdown } from '../utils/markdown';
 import { FileItem } from '../types';
 import { apiClient } from '../api/client';
@@ -121,20 +122,37 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
     }
   };
 
-  const handleDownloadMarkdown = () => {
-    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${file.name.replace(/\.[^/.]+$/, '')}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-    onNotify('.md Datei heruntergeladen', 'success');
+  /**
+   * Saves an export. The desktop app uses a "save as" dialog (a WebView ignores download
+   * links); the browser build falls back to a normal download.
+   */
+  const exportFile = async (data: string, extension: 'md' | 'html' | 'txt', mime: string) => {
+    const fileName = `${file.name.replace(/\.[^/.]+$/, '')}.${extension}`;
     setShowExportMenu(false);
+    try {
+      if (IS_DESKTOP) {
+        const target = await pickExportTarget(fileName, extension);
+        if (!target) return; // dialog cancelled
+        await apiClient.saveFile(target, data);
+      } else {
+        const url = URL.createObjectURL(new Blob([data], { type: `${mime};charset=utf-8` }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      onNotify(`${fileName} gespeichert`, 'success');
+    } catch (e) {
+      onNotify(`Export fehlgeschlagen: ${e instanceof Error ? e.message : e}`, 'error');
+    }
   };
 
-  const handleDownloadHtml = () => {
-    const fullHtml = `<!DOCTYPE html>
+  const handleDownloadMarkdown = () => exportFile(content, 'md', 'text/markdown');
+
+  const handleDownloadHtml = () =>
+    exportFile(
+      `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -151,29 +169,12 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
 <body>
 ${renderedHtml}
 </body>
-</html>`;
-    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${file.name.replace(/\.[^/.]+$/, '')}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
-    onNotify('HTML Dokument heruntergeladen', 'success');
-    setShowExportMenu(false);
-  };
+</html>`,
+      'html',
+      'text/html'
+    );
 
-  const handleDownloadTxt = () => {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${file.name.replace(/\.[^/.]+$/, '')}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    onNotify('.txt Datei heruntergeladen', 'success');
-    setShowExportMenu(false);
-  };
+  const handleDownloadTxt = () => exportFile(content, 'txt', 'text/plain');
 
   const handlePrintPdf = () => {
     setShowExportMenu(false);
@@ -354,7 +355,7 @@ ${renderedHtml}
                     style={{ justifyContent: 'flex-start', width: '100%' }}
                     onClick={handleDownloadMarkdown}
                   >
-                    <Download size={13} /> Als .md herunterladen
+                    <Download size={13} /> Als Markdown speichern …
                   </button>
                   <button
                     type="button"
@@ -362,7 +363,7 @@ ${renderedHtml}
                     style={{ justifyContent: 'flex-start', width: '100%' }}
                     onClick={handleDownloadHtml}
                   >
-                    <FileCode size={13} /> Als HTML herunterladen
+                    <FileCode size={13} /> Als HTML speichern …
                   </button>
                   <button
                     type="button"
@@ -370,7 +371,7 @@ ${renderedHtml}
                     style={{ justifyContent: 'flex-start', width: '100%' }}
                     onClick={handleDownloadTxt}
                   >
-                    <FileText size={13} /> Als .txt herunterladen
+                    <FileText size={13} /> Als Text speichern …
                   </button>
                   <button
                     type="button"

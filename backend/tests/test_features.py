@@ -121,16 +121,6 @@ class TestSafeTargetNames(unittest.TestCase):
             self.assertEqual(os.path.dirname(os.path.realpath(target)), os.path.realpath(out))
             self.assertTrue(target.endswith(".md"))
 
-    def test_prefix_with_separator_is_neutralised(self):
-        import tempfile, os
-        from backend.engine import ConversionEngine
-        engine = ConversionEngine()
-        with tempfile.TemporaryDirectory() as tmp:
-            src = os.path.join(tmp, "doc.txt")
-            open(src, "w").close()
-            target = engine.compute_target_path(src, target_dir=tmp, naming_strategy="prefix", custom_prefix="../")
-            self.assertEqual(os.path.dirname(os.path.realpath(target)), os.path.realpath(tmp))
-
     def test_watcher_expands_home(self):
         import os, tempfile
         from unittest import mock

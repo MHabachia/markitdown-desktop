@@ -44,15 +44,14 @@ app = FastAPI(title="MarkItDown Desktop API", version="1.0.0")
 
 # --- Access control -------------------------------------------------------
 
+
 API_TOKEN = os.environ.get("MARKITDOWN_API_TOKEN", "")
 
-ALLOWED_ORIGINS = [
-    "tauri://localhost",
-    "http://tauri.localhost",
-    "https://tauri.localhost",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+APP_ORIGINS = ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost"]
+DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+# The desktop app always passes a token; without one we are in development (browser + Vite),
+# which is the only case where the dev server's origin is allowed.
+ALLOWED_ORIGINS = APP_ORIGINS if API_TOKEN else APP_ORIGINS + DEV_ORIGINS
 ALLOWED_HOSTNAMES = {"127.0.0.1", "localhost", "[::1]"}
 
 app.add_middleware(
@@ -103,11 +102,9 @@ EXPORT_DIR = os.path.join(DATA_DIR, "exports")
 MAX_RESOLVED_FILES = 5000
 UPLOAD_MAX_AGE_SECONDS = 24 * 3600
 MAX_UPLOAD_BYTES = 256 * 1024 * 1024
-MARKDOWN_EXTENSIONS = {".md", ".markdown", ".txt"}
-BLOCKED_OPEN_EXTENSIONS = {
-    ".app", ".exe", ".bat", ".cmd", ".com", ".msi", ".scr", ".ps1", ".vbs", ".js", ".jar",
-    ".sh", ".command", ".terminal", ".workflow", ".dmg", ".pkg", ".lnk", ".desktop", ".reg",
-}
+MARKDOWN_EXTENSIONS = {".md", ".markdown"}
+# Editor exports chosen in a "save as" dialog may also be HTML or plain text.
+EXPORT_EXTENSIONS = MARKDOWN_EXTENSIONS | {".html", ".txt"}
 
 # One lock serialises read-modify-write cycles on history.json / settings.json,
 # since parallel API requests and the folder watcher all touch them.
@@ -220,10 +217,7 @@ class ConvertRequest(BaseModel):
     file_base64: Optional[str] = None
     file_name: Optional[str] = None
     target_dir: Optional[str] = None
-    naming_strategy: str = Field(default="same", description="same, timestamp, prefix, suffix")
     filename_template: Optional[str] = None
-    custom_prefix: str = ""
-    custom_suffix: str = ""
     collision_strategy: str = Field(default="rename", description="rename, overwrite, skip, error")
     keep_data_uris: bool = False
     # False: return the Markdown only; the user previews it and saves explicitly.
@@ -277,6 +271,8 @@ class SettingsModel(BaseModel):
     keep_data_uris: bool = False
     # Off: results are previewed first and saved explicitly.
     auto_save_after_convert: bool = False
+    # Asks GitHub for a newer release a few seconds after start (no data is sent).
+    check_updates: bool = True
     timeout_seconds: int = Field(default=60, ge=1, le=3600)
 
 @app.get("/api/health")
@@ -329,9 +325,6 @@ def convert_single(req: ConvertRequest):
     res = engine.convert_file(
         source_path=source_path,
         target_dir=out_dir,
-        naming_strategy=req.naming_strategy,
-        custom_prefix=req.custom_prefix,
-        custom_suffix=req.custom_suffix,
         collision_strategy=req.collision_strategy,
         keep_data_uris=req.keep_data_uris,
         filename_template=req.filename_template,
@@ -425,8 +418,8 @@ def resolve_paths(req: ResolvePathsRequest):
 @app.post("/api/save-file")
 def save_file(req: SaveFileRequest):
     p = pathlib.Path(req.file_path)
-    if p.suffix.lower() not in MARKDOWN_EXTENSIONS:
-        raise HTTPException(status_code=403, detail="Nur Markdown- und Textdateien können gespeichert werden.")
+    if p.suffix.lower() not in EXPORT_EXTENSIONS:
+        raise HTTPException(status_code=403, detail="Nur Markdown-, HTML- und Textdateien können gespeichert werden.")
     try:
         p.parent.mkdir(parents=True, exist_ok=True)
         tmp = p.with_name(f".{p.name}.{uuid.uuid4().hex}.tmp")
@@ -466,8 +459,9 @@ def open_file(req: OpenPathRequest):
     path = req.path
     if not os.path.isfile(path):
         raise HTTPException(status_code=404, detail="Datei existiert nicht")
-    if pathlib.Path(path).suffix.lower() in BLOCKED_OPEN_EXTENSIONS:
-        raise HTTPException(status_code=403, detail="Ausführbare Dateitypen werden nicht geöffnet.")
+    # Allow-list, not a block-list: the app only ever opens the Markdown files it wrote.
+    if pathlib.Path(path).suffix.lower() not in MARKDOWN_EXTENSIONS:
+        raise HTTPException(status_code=403, detail="Es werden nur Markdown-Dateien geöffnet.")
     try:
         _open_with_os(path)
         return {"success": True, "opened": path}

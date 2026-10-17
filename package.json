@@ -1,7 +1,7 @@
 {
   "name": "markitdown-desktop",
   "productName": "MarkItDown Desktop",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Desktop-App, die Dokumente lokal mit Microsoft MarkItDown in Markdown umwandelt",
   "scripts": {
     "dev": "vite",
@@ -16,7 +16,8 @@
     "test": ".venv/bin/python -m unittest discover -s backend/tests -t .",
     "lint": "oxlint --deny-warnings",
     "test:ui": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "version:set": "python3 scripts/set_version.py"
   },
   "keywords": [],
   "author": "MHabachia",

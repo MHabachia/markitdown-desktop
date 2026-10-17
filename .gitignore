@@ -18,9 +18,6 @@ release/
 .env
 .env.local
 
-# Generated converted samples in development
-samples/*.md
-samples/*.zip
 markitdown_export*.zip
 
 # System & IDE

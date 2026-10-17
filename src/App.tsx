@@ -61,9 +61,9 @@ const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 export const App: React.FC = () => {
   const { toasts, notify, dismiss } = useToasts();
   const { settings, settingsRef, updateSettings } = useSettings();
+  const { update, checkForUpdate, installUpdate } = useUpdater(settings.check_updates);
   const { diagnostics, capabilities, refresh: refreshSystemInfo } = useSystemInfo();
   const { history, reloadHistory, clearHistory, removeHistoryItem } = useHistory(notify);
-  const { update, checkForUpdate, installUpdate } = useUpdater();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('studio');
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);

@@ -1,0 +1,17 @@
+# cargo-deny: checks the Rust dependencies against the RustSec advisory database.
+[advisories]
+ignore = [
+  # zip 4.x (via tauri-plugin-updater): unsafe symlink/permission handling in
+  # ZipArchive::extract. Not reachable here: our update bundles are .tar.gz (macOS) and an
+  # NSIS installer (Windows), and every update is signature-checked before it is unpacked.
+  # Remove once tauri-plugin-updater depends on zip >= 9.
+  { id = "RUSTSEC-2026-0367", reason = "zip extraction not used for our update formats; updates are signature-verified" },
+  { id = "RUSTSEC-2026-0368", reason = "zip extraction not used for our update formats; updates are signature-verified" },
+  { id = "RUSTSEC-2026-0369", reason = "zip extraction not used for our update formats; updates are signature-verified" },
+  # Unmaintained crates pulled in by Tauri for Linux (D-Bus) and proc macros; not shipped
+  # on macOS/Windows or only used at compile time.
+  { id = "RUSTSEC-2026-0370", reason = "zvariant: Linux-only Tauri dependency" },
+  { id = "RUSTSEC-2026-0371", reason = "zbus_names: Linux-only Tauri dependency" },
+  { id = "RUSTSEC-2026-0372", reason = "zvariant_derive: Linux-only Tauri dependency" },
+  { id = "RUSTSEC-2024-0370", reason = "proc-macro-error: compile-time only" },
+]

@@ -59,14 +59,12 @@ class ConversionEngine:
         self,
         source_path: str,
         target_dir: Optional[str] = None,
-        naming_strategy: str = "same",
-        custom_prefix: str = "",
-        custom_suffix: str = "",
         collision_strategy: str = "rename",
         filename_template: Optional[str] = None
     ) -> str:
         """
-        Calculates safe destination file path based on directory, naming strategy, or template.
+        Safe destination path from the target folder (default: next to the source) and the
+        naming template ({name}, {date}, {time}, {ext}).
         """
         source_p = pathlib.Path(source_path)
         base_name = source_p.stem
@@ -94,16 +92,10 @@ class ConversionEngine:
             )
             if not candidate_name.endswith(".md"):
                 candidate_name += ".md"
-        elif naming_strategy == "timestamp":
-            candidate_name = f"{base_name}_{now_str}.md"
-        elif naming_strategy == "prefix" and custom_prefix:
-            candidate_name = f"{custom_prefix}{base_name}.md"
-        elif naming_strategy == "suffix" and custom_suffix:
-            candidate_name = f"{base_name}{custom_suffix}.md"
         else:
             candidate_name = f"{base_name}.md"
 
-        # Templates, prefixes and suffixes are user input: keep the result a single file name
+        # The template is user input: keep the result a single file name
         # so it can never point outside the target directory.
         candidate_name = _safe_markdown_name(candidate_name, fallback=f"{base_name}.md")
         target_file = out_dir / candidate_name
@@ -134,9 +126,6 @@ class ConversionEngine:
         self,
         source_path: str,
         target_dir: Optional[str] = None,
-        naming_strategy: str = "same",
-        custom_prefix: str = "",
-        custom_suffix: str = "",
         collision_strategy: str = "rename",
         keep_data_uris: bool = False,
         filename_template: Optional[str] = None,
@@ -214,9 +203,6 @@ class ConversionEngine:
                     source_path=source_path,
                     content=markdown_content,
                     target_dir=target_dir,
-                    naming_strategy=naming_strategy,
-                    custom_prefix=custom_prefix,
-                    custom_suffix=custom_suffix,
                     collision_strategy=collision_strategy,
                     filename_template=filename_template
                 ))
@@ -264,9 +250,6 @@ class ConversionEngine:
         source_path: str,
         content: str,
         target_dir: Optional[str] = None,
-        naming_strategy: str = "same",
-        custom_prefix: str = "",
-        custom_suffix: str = "",
         collision_strategy: str = "rename",
         filename_template: Optional[str] = None
     ) -> Dict[str, Any]:
@@ -280,9 +263,6 @@ class ConversionEngine:
             target_path = self.compute_target_path(
                 source_path=source_path,
                 target_dir=target_dir,
-                naming_strategy=naming_strategy,
-                custom_prefix=custom_prefix,
-                custom_suffix=custom_suffix,
                 collision_strategy=collision_strategy,
                 filename_template=filename_template
             )

@@ -110,6 +110,8 @@ def main():
         "--hidden-import", "pdfminer",
         "--hidden-import", "PIL",
         "--collect-all", "markitdown",
+        # example documents for "Mit Beispielen ausprobieren"
+        "--add-data", f"{ROOT_DIR / 'backend' / 'sample_files'}{os.pathsep}backend/sample_files",
         *metadata_args(),
         "--collect-all", "magika",
         str(BACKEND_ENTRY)

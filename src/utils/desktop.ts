@@ -20,6 +20,13 @@ export async function pickFolder(): Promise<string | null> {
   return typeof result === 'string' ? result : null;
 }
 
+/** "Save as" dialog for an editor export (Markdown, HTML or plain text). */
+export async function pickExportTarget(defaultName: string, extension: 'md' | 'html' | 'txt'): Promise<string | null> {
+  const labels = { md: 'Markdown', html: 'HTML', txt: 'Text' };
+  const { save } = await import('@tauri-apps/plugin-dialog');
+  return save({ defaultPath: defaultName, filters: [{ name: labels[extension], extensions: [extension] }], title: 'Exportieren' });
+}
+
 /** "Save as" dialog for one Markdown file. */
 export async function pickMarkdownTarget(defaultName: string): Promise<string | null> {
   const { save } = await import('@tauri-apps/plugin-dialog');

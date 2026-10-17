@@ -106,6 +106,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </Section>
 
 
+      <Section title="Updates">
+        <Row
+          title="Automatisch nach Updates suchen"
+          description="Fragt kurz nach dem Start bei GitHub nach einer neuen Version. Dabei werden keine Daten aus der App gesendet."
+        >
+          <Checkbox checked={settings.check_updates} label="Aktiv" onChange={(v) => onUpdateSettings({ check_updates: v })} />
+        </Row>
+      </Section>
+
       <Section title="Darstellung">
         <Row title="Erscheinungsbild">
           <select value={settings.theme} onChange={(e) => onUpdateSettings({ theme: e.target.value as AppSettings['theme'] })}>

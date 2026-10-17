@@ -62,6 +62,7 @@ export interface AppSettings {
   watcher_output_dir: string;
   keep_data_uris: boolean;
   auto_save_after_convert: boolean;
+  check_updates: boolean;
   timeout_seconds: number;
 }
 
@@ -77,6 +78,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   watcher_output_dir: '',
   keep_data_uris: false,
   auto_save_after_convert: false,
+  check_updates: true,
   timeout_seconds: 60
 };
 

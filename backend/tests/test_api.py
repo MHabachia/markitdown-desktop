@@ -238,6 +238,38 @@ class TestPreviewThenSave(unittest.TestCase):
         self.assertEqual(resp.status_code, 400)
 
 
+class TestTightenedAccess(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.client = TestClient(app, base_url=TEST_BASE_URL)
+        cls.folder = tempfile.mkdtemp()
+
+    def test_open_file_only_opens_markdown(self):
+        for name in ["script.py", "page.html", "notes.txt"]:
+            path = os.path.join(self.folder, name)
+            with open(path, "w") as f:
+                f.write("x")
+            self.assertEqual(self.client.post("/api/open-file", json={"path": path}).status_code, 403, name)
+
+    def test_export_allows_html_and_text_but_not_scripts(self):
+        for name, expected in [("export.html", 200), ("export.txt", 200), ("export.md", 200), ("evil.py", 403)]:
+            resp = self.client.post("/api/save-file", json={"file_path": os.path.join(self.folder, name), "content": "x"})
+            self.assertEqual(resp.status_code, expected, name)
+
+    def test_dev_origin_rejected_when_running_as_app(self):
+        import importlib
+        from unittest import mock
+        from backend import api as api_module
+        with mock.patch.dict(os.environ, {"MARKITDOWN_API_TOKEN": "t"}):
+            reloaded = importlib.reload(api_module)
+            try:
+                self.assertNotIn("http://localhost:5173", reloaded.ALLOWED_ORIGINS)
+            finally:
+                os.environ.pop("MARKITDOWN_API_TOKEN", None)
+                importlib.reload(api_module)
+        self.assertIn("http://localhost:5173", api_module.ALLOWED_ORIGINS)
+
+
 class TestApiToken(unittest.TestCase):
     def test_token_required_when_configured(self):
         from backend import api as api_module
