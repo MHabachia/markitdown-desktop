@@ -116,7 +116,8 @@ def generate_toc(content: str) -> str:
     lines = content.splitlines()
 
     for line in lines:
-        match = re.match(r"^(#{1,6})\s+(.+)$", line.strip())
+        # "[ \t]+" followed by a non-space keeps the match linear (no backtracking over spaces).
+        match = re.match(r"^(#{1,6})[ \t]+(\S.*)$", line.strip())
         if match:
             level = len(match.group(1))
             title = match.group(2).strip()
