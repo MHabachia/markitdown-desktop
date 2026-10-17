@@ -1,0 +1,4 @@
+# Build-only tools on top of the app dependencies:
+#   uv pip compile --universal --python-version 3.12 requirements-build.in -o requirements-build.txt
+-r requirements.in
+pyinstaller

@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Builds
+dist/
+dist-electron/
+src-tauri/target/
+release/
+
+# Logs & Temporary files
+*.log
+*.tmp
+*.tmp_md
+.DS_Store
+.env
+.env.local
+
+# Generated converted samples in development
+samples/*.md
+samples/*.zip
+markitdown_export*.zip
+
+# System & IDE
+.vscode/
+.idea/
+
+# PyInstaller
+backend-service.spec
+build/
+src-tauri/binaries/
+
+# CI scratch
+.venv-test/
+sigs/
+latest.json
+src-tauri/tauri.windows-signing.conf.json
+
+# Playwright
+test-results/
+playwright-report/
