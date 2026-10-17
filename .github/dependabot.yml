@@ -1,12 +1,10 @@
 version: 2
+# Python is not listed on purpose: requirements*.txt are a cross-platform uv lock
+# (uv pip compile --universal), which Dependabot would regenerate for Linux only and
+# break the Windows build. Python security alerts still arrive; update with the uv
+# commands from the README.
 updates:
   - package-ecosystem: npm
-    directory: /
-    schedule: { interval: monthly }
-    groups:
-      minor-and-patch: { update-types: [minor, patch] }
-
-  - package-ecosystem: pip
     directory: /
     schedule: { interval: monthly }
     groups:

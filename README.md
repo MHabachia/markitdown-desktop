@@ -89,7 +89,7 @@ Für eine neue Version: `npm run version:set -- 1.2.0` ausführen (setzt die Num
 
 Damit installierte Apps Updates annehmen, werden die Update-Pakete mit einem eigenen Schlüssel signiert. Er liegt als Secret `TAURI_SIGNING_PRIVATE_KEY` im Repository; der passende öffentliche Schlüssel steht in `src-tauri/tauri.conf.json`.
 
-Abhängigkeiten hält Dependabot aktuell: Kleine Updates (Patch und Minor) werden automatisch übernommen, sobald alle Tests grün sind; große Versionssprünge bleiben zur Durchsicht offen. Sicherheitsmeldungen bitte wie in [SECURITY.md](SECURITY.md) beschrieben.
+Die JavaScript- und Rust-Pakete sowie die GitHub Actions hält Dependabot aktuell: Kleine Updates (Patch und Minor) werden automatisch übernommen, sobald alle Tests grün sind; große Versionssprünge bleiben zur Durchsicht offen. Die Python-Pakete aktualisiert man mit den `uv`-Befehlen oben, weil nur so die Liste für alle Plattformen stimmt; Sicherheitswarnungen meldet GitHub trotzdem. Sicherheitsmeldungen bitte wie in [SECURITY.md](SECURITY.md) beschrieben.
 
 ## Lizenz
 
