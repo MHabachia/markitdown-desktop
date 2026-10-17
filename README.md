@@ -83,13 +83,13 @@ Verlauf und Einstellungen liegen im üblichen App-Ordner des Systems (`~/Library
 
 ## Releases
 
-Es gibt zwei GitHub-Workflows. „Tests“ läuft bei jedem Push und Pull Request: Python-Unittests unter Ubuntu und Windows, Vitest-Unit-Tests, Lint und Typprüfung, der Frontend-Build, eine Prüfung der Rust-Abhängigkeiten auf bekannte Lücken und die Playwright-Tests. „Build & Release“ startet danach auf `main` und baut die Installer für macOS und Windows.
+Es gibt zwei GitHub-Workflows. „Tests“ läuft bei jedem Push und Pull Request: Python-Unittests unter Ubuntu und Windows, Vitest-Unit-Tests, Lint und Typprüfung, der Frontend-Build, ein Kompiliertest des Rust-Teils, eine Prüfung der Rust-Abhängigkeiten auf bekannte Lücken und die Playwright-Tests. „Build & Release“ startet danach auf `main` und baut die Installer für macOS und Windows.
 
 Für eine neue Version: `npm run version:set -- 1.2.0` ausführen (setzt die Nummer in allen Dateien), einen Abschnitt in `CHANGELOG.md` schreiben und pushen. Ist die Version neu, erstellt der Workflow das Release samt Update-Datei für die installierten Apps.
 
 Damit installierte Apps Updates annehmen, werden die Update-Pakete mit einem eigenen Schlüssel signiert. Er liegt als Secret `TAURI_SIGNING_PRIVATE_KEY` im Repository; der passende öffentliche Schlüssel steht in `src-tauri/tauri.conf.json`.
 
-Abhängigkeiten hält Dependabot aktuell, Sicherheitsmeldungen bitte wie in [SECURITY.md](SECURITY.md) beschrieben.
+Abhängigkeiten hält Dependabot aktuell: Kleine Updates (Patch und Minor) werden automatisch übernommen, sobald alle Tests grün sind; große Versionssprünge bleiben zur Durchsicht offen. Sicherheitsmeldungen bitte wie in [SECURITY.md](SECURITY.md) beschrieben.
 
 ## Lizenz
 

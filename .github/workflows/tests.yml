@@ -1,7 +1,7 @@
 name: Tests
 
-# Python unittest, Vitest unit tests, lint, frontend build, Rust dependency audit and
-# Playwright e2e tests
+# Python unittest, Vitest unit tests, lint, frontend build, Rust build check and dependency
+# audit, and Playwright e2e tests
 # on every push and pull request. A successful run on main starts
 # "Build & Release" (build-release.yml).
 on:
@@ -119,3 +119,46 @@ jobs:
           name: playwright-report
           path: playwright-report
           retention-days: 7
+
+  rust-check:
+    name: Rust build check (cargo check)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      # Tauri embeds the built frontend, so it has to exist before the Rust code compiles.
+      - run: npm run build
+      - name: cargo check
+        working-directory: src-tauri
+        run: cargo check --locked
+
+  # Dependabot patch and minor updates are merged once every check above is green.
+  # Major updates stay open for a manual look.
+  dependabot-auto-merge:
+    name: Merge Dependabot update
+    needs: [ python-unittest, js-unit-tests, lint, frontend-build, rust-advisories, rust-check, e2e ]
+    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@21025c705c08248db411dc16f3619e6b5f9ea21a # v2
+      - name: Merge
+        if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --squash --delete-branch "$PR_URL"
+      - name: Leave major updates for review
+        if: steps.meta.outputs.update-type == 'version-update:semver-major'
+        run: echo "Major update – please review and merge by hand."
