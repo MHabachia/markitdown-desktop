@@ -28,7 +28,7 @@ import threading
 import time
 import uuid
 import zipfile
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -228,6 +228,9 @@ def load_settings() -> Dict[str, Any]:
     return settings
 
 
+CollisionStrategy = Literal["rename", "overwrite", "skip", "error"]
+
+
 # Models
 class ConvertRequest(BaseModel):
     source_path: Optional[str] = None
@@ -235,7 +238,7 @@ class ConvertRequest(BaseModel):
     file_name: Optional[str] = None
     target_dir: Optional[str] = None
     filename_template: Optional[str] = None
-    collision_strategy: str = Field(default="rename", description="rename, overwrite, skip, error")
+    collision_strategy: CollisionStrategy = "rename"
     keep_data_uris: bool = False
     # False: return the Markdown only; the user previews it and saves explicitly.
     save: bool = True
@@ -250,7 +253,7 @@ class SaveMarkdownRequest(BaseModel):
     # Exact file chosen in a "save as" dialog (the dialog already asked about overwriting).
     target_path: Optional[str] = None
     filename_template: Optional[str] = None
-    collision_strategy: str = "rename"
+    collision_strategy: CollisionStrategy = "rename"
     word_count: Optional[int] = None
     duration_ms: Optional[float] = None
 
@@ -280,7 +283,7 @@ class SettingsModel(BaseModel):
     default_output_dir: str = ""
     open_output_after_convert: bool = False
     open_preview_after_convert: bool = True
-    collision_strategy: str = "rename"
+    collision_strategy: CollisionStrategy = "rename"
     filename_template: str = "{name}.md"
     concurrency_limit: int = Field(default=4, ge=1, le=16)
     watcher_inbox_dir: str = ""
@@ -331,6 +334,16 @@ def convert_single(req: ConvertRequest):
     if not source_path:
         raise HTTPException(status_code=400, detail="Weder source_path noch file_base64 angegeben.")
 
+    upload_dir_to_remove = os.path.dirname(source_path) if req.file_base64 else None
+    try:
+        return _convert_and_record(req, source_path, file_name)
+    finally:
+        # An upload is only a temporary copy; it is not needed once the result is in the response.
+        if upload_dir_to_remove:
+            shutil.rmtree(upload_dir_to_remove, ignore_errors=True)
+
+
+def _convert_and_record(req: ConvertRequest, source_path: str, file_name: Optional[str]) -> Dict[str, Any]:
     if req.target_dir:
         out_dir: Optional[str] = os.path.expanduser(req.target_dir)  # created if missing
     elif req.file_base64:
@@ -438,8 +451,9 @@ def save_file(req: SaveFileRequest):
     p = pathlib.Path(req.file_path)
     if p.suffix.lower() not in EXPORT_EXTENSIONS:
         raise HTTPException(status_code=403, detail="Nur Markdown-, HTML- und Textdateien können gespeichert werden.")
+    if not p.parent.is_dir():
+        raise HTTPException(status_code=400, detail="Der Zielordner existiert nicht.")
     try:
-        p.parent.mkdir(parents=True, exist_ok=True)
         tmp = p.with_name(f".{p.name}.{uuid.uuid4().hex}.tmp")
         tmp.write_text(req.content, encoding="utf-8")
         os.replace(tmp, p)

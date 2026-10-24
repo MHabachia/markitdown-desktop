@@ -30,6 +30,20 @@ test('converts, previews without saving, then saves next to the originals', asyn
   await expect(page.locator('.list-row')).toHaveCount(8);
 });
 
+test('a broken document shows a readable error and does not stop the others', async ({ page }) => {
+  await page.locator('input[type=file]').first().setInputFiles([
+    { name: 'gut.txt', mimeType: 'text/plain', buffer: Buffer.from('Alles in Ordnung\n') },
+    { name: 'kaputt.docx', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', buffer: Buffer.concat([Buffer.from('PK\x03\x04'), Buffer.alloc(40)]) }
+  ]);
+  await page.getByRole('button', { name: 'Umwandeln (2)' }).click();
+
+  await expect(page.getByText('1 Fehler')).toBeVisible();
+  // The good file is converted and waits for the user to save it.
+  await expect(page.getByRole('button', { name: 'Alle speichern (1)' })).toBeVisible();
+  // The broken one explains itself instead of failing silently.
+  await expect(page.locator('.tile-error')).not.toBeEmpty();
+});
+
 test('preview strips scripts and event handlers from converted documents', async ({ page }) => {
   await page.locator('input[type=file]').first().setInputFiles({
     name: 'boese.txt',

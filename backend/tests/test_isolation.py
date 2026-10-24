@@ -128,6 +128,18 @@ class TestWatcherFailures(unittest.TestCase):
         self.assertEqual([os.path.basename(c) for c in calls], ["a.tsv"])
 
 
+class TestEmptyResults(unittest.TestCase):
+    def test_pdf_without_text_is_not_called_an_image(self):
+        engine = ConversionEngine()
+        with tempfile.TemporaryDirectory() as tmp:
+            src = pathlib.Path(tmp) / "scan.pdf"
+            src.write_bytes(b"%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF")
+            res = engine.convert_file(str(src), save=False)
+        self.assertTrue(res["success"])
+        self.assertIn("kein Text gefunden", res["markdown"])
+        self.assertNotIn("Bild", res["markdown"])
+
+
 class TestImageFallback(unittest.TestCase):
     def test_note_has_no_path_and_no_metadata_table(self):
         from unittest import mock

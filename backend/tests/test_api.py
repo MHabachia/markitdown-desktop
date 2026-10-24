@@ -69,6 +69,34 @@ class TestFastAPIEndpoints(unittest.TestCase):
         with open(test_file, encoding="utf-8") as f:
             self.assertEqual(f.read(), "# Updated Content by Editor")
 
+    def test_save_file_does_not_create_folders(self):
+        target = os.path.join(self.temp_dir, "gibt-es-nicht", "x.md")
+        resp = self.client.post("/api/save-file", json={"file_path": target, "content": "x"})
+        self.assertEqual(resp.status_code, 400)
+        self.assertFalse(os.path.exists(os.path.dirname(target)))
+
+    def test_unknown_collision_strategy_is_rejected(self):
+        for url, body in (
+            ("/api/convert", {"source_path": self.sample_files["txt"], "collision_strategy": "rename "}),
+            ("/api/save-markdown", {"content": "x", "target_dir": self.temp_dir, "collision_strategy": "ueberschreiben"}),
+        ):
+            self.assertEqual(self.client.post(url, json=body).status_code, 422, url)
+
+    def test_upload_copy_is_removed_after_conversion(self):
+        import base64
+        from backend import api
+        before = set(os.listdir(api.UPLOAD_DIR)) if os.path.isdir(api.UPLOAD_DIR) else set()
+        for save in (False, True):
+            resp = self.client.post("/api/convert", json={
+                "file_base64": base64.b64encode(b"Hallo").decode(),
+                "file_name": "upload.txt",
+                "target_dir": self.temp_dir,
+                "save": save,
+            })
+            self.assertTrue(resp.json()["success"])
+        after = set(os.listdir(api.UPLOAD_DIR)) if os.path.isdir(api.UPLOAD_DIR) else set()
+        self.assertEqual(after - before, set())
+
     def test_convert_without_target_writes_next_to_source(self):
         folder = tempfile.mkdtemp()
         src = os.path.join(folder, "notes.txt")

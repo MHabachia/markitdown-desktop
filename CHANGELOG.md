@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.3
+
+- Windows: Der Installer und der Deinstaller zeigen jetzt das App-Icon statt des Standard-Symbols.
+- Kommt die Umwandlungs-Engine nicht hoch, zeigt die App das jetzt deutlich an (rote Anzeige in der Seitenleiste und ein Hinweis mit dem Ort des Protokolls). Das Protokoll des letzten Starts bleibt als `backend.previous.log` erhalten.
+- Dokumente ohne lesbaren Text (z. B. gescannte PDFs) liefern einen kurzen Hinweis, der sie nicht mehr als „Bild“ bezeichnet.
+- Hochgeladene Dateien im Browser-Modus werden nach der Umwandlung sofort gelöscht, nicht erst nach 24 Stunden.
+- Das Backend nimmt nur noch gültige Werte für die Namenskollision an, „Speichern“ legt keine fehlenden Ordner mehr an, und ein Test hängt nicht mehr an einer festen MarkItDown-Version.
+
 ## 1.1.2
 
 - Das Zeitlimit gilt jetzt im Backend: Eine hängende Datei wird wirklich abgebrochen, statt im Hintergrund weiterzulaufen, und die Fehlermeldung nennt das Limit.

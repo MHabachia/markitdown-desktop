@@ -24,7 +24,7 @@ class TestMarkItDownEngine(unittest.TestCase):
         diag = get_system_diagnostics()
         self.assertEqual(diag["status"], "ready")
         self.assertEqual(diag["engine"], "Microsoft MarkItDown")
-        self.assertIn("0.1.8", diag["markitdown_version"])
+        self.assertRegex(diag["markitdown_version"], r"^\d+\.\d+")
         self.assertGreater(diag["ready_formats_count"], 5)
 
     def test_02_format_capabilities(self):

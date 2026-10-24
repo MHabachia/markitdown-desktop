@@ -72,3 +72,14 @@ export async function listenForFileDrops(handler: DropHandler): Promise<() => vo
     }
   });
 }
+
+/** Folder with the backend log (desktop app only); null in the browser or if it cannot be determined. */
+export async function backendLogFolder(): Promise<string | null> {
+  if (!IS_DESKTOP) return null;
+  try {
+    const { appLogDir } = await import('@tauri-apps/api/path');
+    return await appLogDir();
+  } catch {
+    return null;
+  }
+}

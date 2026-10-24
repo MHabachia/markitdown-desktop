@@ -28,6 +28,7 @@ except ImportError:
 from backend.isolation import ConversionPool, ConversionTimeout, RemoteError
 from backend.ocr_service import extract_image_visual_markdown
 
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
 _UNSAFE_NAME_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
 
 
@@ -183,14 +184,16 @@ class ConversionEngine:
             else:
                 markdown_content, doc_title = self._pool.convert(str(source_p), keep_data_uris, timeout)
 
-            # OCR / Visual Fallback for image formats or empty documents
+            # Images: add OCR text if available. Anything else that produced no text gets a short note.
             ext = source_p.suffix.lower()
-            if (not markdown_content.strip()) or (ext in (".png", ".jpg", ".jpeg", ".webp", ".bmp")):
+            if ext in IMAGE_EXTENSIONS:
                 image_info = extract_image_visual_markdown(str(source_p))
                 if not markdown_content.strip():
                     markdown_content = image_info.get("markdown", "")
                 elif image_info.get("has_ocr"):
                     markdown_content = markdown_content + "\n\n" + image_info.get("markdown", "")
+            elif not markdown_content.strip():
+                markdown_content = f"*{source_p.name}: kein Text gefunden (z. B. ein Scan ohne Textebene).*\n"
 
             out: Dict[str, Any] = {
                 "success": True,

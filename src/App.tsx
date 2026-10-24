@@ -16,7 +16,8 @@ import {
   listenForFileDrops,
   pickFiles,
   pickFolder,
-  pickZipTarget
+  pickZipTarget,
+  backendLogFolder
 } from './utils/desktop';
 
 import { Sidebar } from './components/Sidebar';
@@ -62,7 +63,7 @@ export const App: React.FC = () => {
   const { toasts, notify, dismiss } = useToasts();
   const { settings, settingsRef, updateSettings } = useSettings();
   const { update, checkForUpdate, installUpdate } = useUpdater(settings.check_updates);
-  const { diagnostics, capabilities, refresh: refreshSystemInfo } = useSystemInfo();
+  const { diagnostics, capabilities, unreachable: engineUnreachable, refresh: refreshSystemInfo } = useSystemInfo();
   const { history, reloadHistory, clearHistory, removeHistoryItem } = useHistory(notify);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('studio');
@@ -83,6 +84,20 @@ export const App: React.FC = () => {
   }, []);
 
   const queue = useQueue({ settingsRef, notify, onHistoryChanged: reloadHistory, onShowResult: showInPanel });
+
+  // ---------- engine not coming up ----------
+  useEffect(() => {
+    if (!engineUnreachable) return;
+    let cancelled = false;
+    backendLogFolder().then((folder) => {
+      if (cancelled) return;
+      const where = folder ? ` Das Protokoll liegt in: ${folder}` : '';
+      notify(`Die Umwandlungs-Engine antwortet nicht. Starte die App neu.${where}`, 'error');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [engineUnreachable, notify]);
 
   // ---------- theme ----------
   useEffect(() => {
@@ -309,6 +324,7 @@ export const App: React.FC = () => {
         setActiveTab={setActiveTab}
         fileCount={queue.files.length}
         diagnostics={diagnostics}
+        engineUnreachable={engineUnreachable}
         onRetryConnection={refreshSystemInfo}
         update={update}
         onInstallUpdate={installUpdate}

@@ -142,7 +142,12 @@ fn spawn_backend(
 
 fn open_backend_log(dir: &Path) -> Option<File> {
     std::fs::create_dir_all(dir).ok()?;
-    File::create(dir.join("backend.log")).ok()
+    // Keep the last run's log: after a crash it is the one worth reading.
+    let current = dir.join("backend.log");
+    if current.exists() {
+        let _ = std::fs::rename(&current, dir.join("backend.previous.log"));
+    }
+    File::create(current).ok()
 }
 
 /// Writes panics to a file: release builds on Windows have no console to show them.

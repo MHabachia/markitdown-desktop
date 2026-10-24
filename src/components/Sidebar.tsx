@@ -9,6 +9,8 @@ interface SidebarProps {
   setActiveTab: (tab: ActiveTab) => void;
   fileCount: number;
   diagnostics: SystemDiagnostics | null;
+  /** The engine has not answered for a long time (as opposed to still starting). */
+  engineUnreachable: boolean;
   onRetryConnection: () => void;
   update: UpdateState;
   onInstallUpdate: () => void;
@@ -26,6 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab,
   fileCount,
   diagnostics,
+  engineUnreachable,
   onRetryConnection,
   update,
   onInstallUpdate
@@ -85,8 +88,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </span>
         ) : (
           <button type="button" className="engine-state engine-state-retry" onClick={onRetryConnection}>
-            <span className="status-dot warn" aria-hidden="true" />
-            Engine startet …
+            <span className={`status-dot ${engineUnreachable ? 'error' : 'warn'}`} aria-hidden="true" />
+            {engineUnreachable ? 'Engine antwortet nicht · erneut versuchen' : 'Engine startet …'}
           </button>
         )}
       </div>

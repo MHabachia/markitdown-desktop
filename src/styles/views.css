@@ -657,6 +657,7 @@
 .status-failed .status-dot { background-color: var(--color-error); }
 .status-converting .status-dot { background-color: var(--accent-primary); animation: pulse 1.2s ease-in-out infinite; }
 .status-dot.warn { background-color: var(--color-warning); }
+.status-dot.error { background-color: var(--color-error); }
 .status-unsaved .status-dot { background-color: var(--color-warning); }
 .status-unsaved { color: var(--color-warning); }
 
