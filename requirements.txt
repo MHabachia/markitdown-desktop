@@ -17,7 +17,7 @@ certifi==2026.7.22
     #   httpcore
     #   httpx
     #   requests
-cffi==2.1.1 ; platform_python_implementation != 'PyPy'
+cffi==2.1.1
     # via cryptography
 charset-normalizer==3.5.2
     # via
@@ -57,15 +57,13 @@ lxml==6.1.3
     # via
     #   markitdown
     #   python-pptx
-magika==0.6.2 ; sys_platform == 'win32'
-    # via markitdown
-magika==0.6.3 ; sys_platform != 'win32'
+magika==0.6.3
     # via markitdown
 mammoth==1.11.0
     # via markitdown
 markdownify==1.2.3
     # via markitdown
-markitdown==0.1.8
+markitdown[docx,outlook,pdf,pptx,xls,xlsx]==0.1.8
     # via -r requirements.in
 numpy==2.5.3
     # via
@@ -74,13 +72,13 @@ numpy==2.5.3
     #   pandas
 olefile==0.47
     # via markitdown
-onnxruntime==1.30.0
+onnxruntime==1.30.0 ; sys_platform != "darwin" or platform_machine == "arm64"
     # via
     #   -r requirements.in
     #   magika
 openpyxl==3.1.5
     # via markitdown
-opentelemetry-api==1.45.0
+opentelemetry-api==1.45.1
     # via fastapi
 packaging==26.3
     # via onnxruntime
@@ -98,7 +96,7 @@ pillow==12.3.0
     #   python-pptx
 protobuf==7.36.2
     # via onnxruntime
-pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
+pycparser==3.0
     # via cffi
 pydantic==2.13.5
     # via fastapi
@@ -131,14 +129,11 @@ typing-extensions==4.16.0
     #   pydantic
     #   pydantic-core
     #   python-pptx
-    #   starlette
     #   typing-inspection
 typing-inspection==0.4.4
     # via
     #   fastapi
     #   pydantic
-tzdata==2026.5 ; sys_platform == 'emscripten' or sys_platform == 'win32'
-    # via pandas
 urllib3==2.8.0
     # via requests
 uvicorn==0.54.0
