@@ -35,49 +35,25 @@ def run_local_ocr_if_available(file_path: str) -> Optional[str]:
 
 def extract_image_visual_markdown(image_path: str) -> Dict[str, Any]:
     """
-    Extracts image properties and OCR text if possible.
+    Text for an image: the OCR result if Tesseract is available, otherwise one short note.
+    The output goes to AI tools, so it carries no boilerplate and no local file paths.
     """
     p = pathlib.Path(image_path)
-    if not p.exists() or Image is None:
-        return {"markdown": f"![{p.name}]({image_path})\n", "has_ocr": False}
+    if not p.exists():
+        return {"markdown": f"*(Bild {p.name} nicht gefunden)*\n", "has_ocr": False}
 
     ocr_text = run_local_ocr_if_available(image_path)
-    
-    try:
-        with Image.open(image_path) as img:
-            width, height = img.size
-            img_format = img.format or p.suffix.upper().replace(".", "")
-            img_mode = img.mode
-            
-            md_lines = [
-                f"# Bild-Analyse: {p.name}\n",
-                f"![{p.name}]({image_path})\n",
-                "### Eigenschaften",
-                f"| Eigenschaft | Wert |",
-                f"|:---|:---|",
-                f"| **Dateiname** | `{p.name}` |",
-                f"| **Format** | {img_format} |",
-                f"| **Auflösung** | {width} x {height} Pixel |",
-                f"| **Farbraum** | {img_mode} |",
-                f"| **Dateigröße** | {round(p.stat().st_size / 1024, 1)} KB |\n"
-            ]
-            
-            if ocr_text:
-                md_lines.extend([
-                    "### Erkannter Text (Lokales OCR)",
-                    "> ℹ️ *Text wurde über die lokale OCR-Engine extrahiert:*\n",
-                    ocr_text,
-                    "\n"
-                ])
-                return {"markdown": "\n".join(md_lines), "has_ocr": True}
-            else:
-                md_lines.extend([
-                    "> 💡 *Tipp: Für optische Texterkennung aus gescannten Dokumenten kann Tesseract auf dem System installiert werden (`brew install tesseract-lang`).*",
-                    "\n"
-                ])
-                return {"markdown": "\n".join(md_lines), "has_ocr": False}
-    except Exception as e:
-        return {
-            "markdown": f"![{p.name}]({image_path})\n\n*(Bildanalyse fehlgeschlagen: {e})*",
-            "has_ocr": False
-        }
+    if ocr_text:
+        return {"markdown": ocr_text + "\n", "has_ocr": True}
+
+    details = ""
+    if Image is not None:
+        try:
+            with Image.open(image_path) as img:
+                details = f" ({img.size[0]}×{img.size[1]} px, {img.format or p.suffix.lstrip('.').upper()})"
+        except Exception:
+            pass
+    return {
+        "markdown": f"*Bild {p.name}{details}: kein Text erkannt. Für Texterkennung muss Tesseract installiert sein.*\n",
+        "has_ocr": False,
+    }

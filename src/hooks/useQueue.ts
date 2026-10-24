@@ -96,7 +96,8 @@ export function useQueue({ settingsRef, notify, onHistoryChanged, onShowResult }
   const convertOne = async (file: FileItem): Promise<FileItem> => {
     const settings = settingsRef.current;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), settings.timeout_seconds * 1000);
+    // The backend enforces the limit and explains it; this is only the safety net if it stops answering.
+    const timer = setTimeout(() => controller.abort(), (settings.timeout_seconds + 15) * 1000);
     try {
       const res = await apiClient.convertFile(
         {

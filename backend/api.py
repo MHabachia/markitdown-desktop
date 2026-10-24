@@ -40,7 +40,7 @@ from backend.sample_generator import generate_sample_files, ensure_samples_dir
 from backend.watcher import FolderWatcher
 from backend.linter import clean_blank_lines, format_markdown_tables, generate_toc
 
-app = FastAPI(title="MarkItDown Desktop API", version="1.0.0")
+app = FastAPI(title="MarkItDown Desktop API")
 
 # --- Access control -------------------------------------------------------
 
@@ -87,7 +87,6 @@ async def guard_requests(request: Request, call_next):
 
 
 engine = ConversionEngine()
-watcher = FolderWatcher(convert_fn=lambda src, out: engine.convert_file(source_path=src, target_dir=out))
 
 # The desktop shell passes the OS app-data folder; ~/.markitdown-desktop remains the
 # fallback for development and the source of a one-time migration.
@@ -200,6 +199,24 @@ def make_history_entry(res: Dict[str, Any], source_path: str, source_name: str) 
         "file_size_bytes": size,
         "error": res.get("error"),
     }
+
+
+def convert_for_watcher(source: str, target_dir: Optional[str]) -> Dict[str, Any]:
+    """Folder-watcher conversion: saved right away, with the user's settings, and listed in the history."""
+    settings = load_settings()
+    res = engine.convert_file(
+        source_path=source,
+        target_dir=target_dir,
+        collision_strategy=settings["collision_strategy"],
+        keep_data_uris=settings["keep_data_uris"],
+        filename_template=settings["filename_template"],
+        timeout=settings["timeout_seconds"],
+    )
+    append_history(make_history_entry(res, source, os.path.basename(source)))
+    return res
+
+
+watcher = FolderWatcher(convert_fn=convert_for_watcher, supported_fn=engine.supported_extensions)
 
 
 def load_settings() -> Dict[str, Any]:
@@ -328,7 +345,8 @@ def convert_single(req: ConvertRequest):
         collision_strategy=req.collision_strategy,
         keep_data_uris=req.keep_data_uris,
         filename_template=req.filename_template,
-        save=req.save
+        save=req.save,
+        timeout=load_settings()["timeout_seconds"]
     )
 
     # The history lists files on disk: unsaved results are recorded when they are saved.
@@ -615,7 +633,11 @@ def _exit_with_parent(pid: int):
 
 
 if __name__ == "__main__":
+    import multiprocessing
     import uvicorn
+
+    # Needed for the frozen app: conversion workers are started as child processes of this exe.
+    multiprocessing.freeze_support()
 
     parent_pid = os.environ.get("MARKITDOWN_PARENT_PID", "")
     if parent_pid.isdigit():

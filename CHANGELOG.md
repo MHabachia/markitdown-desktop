@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Das Zeitlimit gilt jetzt im Backend: Eine hängende Datei wird wirklich abgebrochen, statt im Hintergrund weiterzulaufen, und die Fehlermeldung nennt das Limit.
+- „Data-URIs behalten“ in den Einstellungen wirkt jetzt tatsächlich.
+- Ordner-Überwachung: Eine Datei, die nicht umgewandelt werden kann, wird nicht mehr jede Sekunde neu versucht (erst wieder, wenn sie sich ändert). Die Überwachung versteht dieselben Dateitypen wie die App, nutzt deine Einstellungen und trägt Ergebnisse in den Verlauf ein.
+- Bilder ohne erkannten Text ergeben nur noch einen kurzen Hinweis statt einer Tabelle mit lokalem Dateipfad; das spart Tokens.
+- Dependabot ist entfernt, Abhängigkeiten werden von Hand aktualisiert.
+
 ## 1.1.1
 
 - macOS: Die App ist jetzt vollständig (ad hoc) signiert. Heruntergeladene Versionen werden von macOS nicht mehr als „beschädigt“ gemeldet, sondern lassen sich über Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“ starten.

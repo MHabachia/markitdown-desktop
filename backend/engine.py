@@ -25,6 +25,7 @@ try:
 except ImportError:
     MarkItDown = None
 
+from backend.isolation import ConversionPool, ConversionTimeout, RemoteError
 from backend.ocr_service import extract_image_visual_markdown
 
 _UNSAFE_NAME_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
@@ -46,6 +47,7 @@ class ConversionEngine:
         # MarkItDown does not document thread safety, and conversions run in parallel
         # request threads: every thread gets its own instance.
         self._local = threading.local()
+        self._pool = ConversionPool()
 
     @property
     def md(self):
@@ -129,10 +131,13 @@ class ConversionEngine:
         collision_strategy: str = "rename",
         keep_data_uris: bool = False,
         filename_template: Optional[str] = None,
-        save: bool = True
+        save: bool = True,
+        timeout: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Converts a single document to Markdown using Microsoft MarkItDown.
+        With a timeout (seconds) the conversion runs in a worker process that is killed when
+        the time is up; without one it runs in this process.
         With save=False nothing is written: the app shows the result first and the user
         saves it explicitly (see save_markdown). The folder watcher keeps save=True.
         Returns complete execution status, content, timing and error diagnostics.
@@ -160,7 +165,7 @@ class ConversionEngine:
                 "duration_ms": 0.0
             }
 
-        if self.md is None:
+        if timeout is None and self.md is None:
             return {
                 "success": False,
                 "source_path": source_path,
@@ -171,9 +176,12 @@ class ConversionEngine:
             }
 
         try:
-            result = self.md.convert(str(source_p))
-            markdown_content = result.text_content or ""
-            doc_title = getattr(result, "title", None)
+            if timeout is None:
+                result = self.md.convert(str(source_p), keep_data_uris=keep_data_uris)
+                markdown_content = result.text_content or ""
+                doc_title = getattr(result, "title", None)
+            else:
+                markdown_content, doc_title = self._pool.convert(str(source_p), keep_data_uris, timeout)
 
             # OCR / Visual Fallback for image formats or empty documents
             ext = source_p.suffix.lower()
@@ -208,10 +216,21 @@ class ConversionEngine:
                 ))
             return out
 
+        except ConversionTimeout:
+            return {
+                "success": False,
+                "source_path": source_path,
+                "target_path": None,
+                "error": f"Zeitüberschreitung nach {round(timeout or 0)} s",
+                "error_details": "Die Umwandlung wurde abgebrochen, weil das Zeitlimit erreicht war.",
+                "solution_hint": "Erhöhe das Zeitlimit in den Einstellungen oder wandle die Datei einzeln um.",
+                "duration_ms": round((time.perf_counter() - start_time) * 1000, 2),
+                "timestamp": datetime.datetime.now().isoformat()
+            }
         except Exception as e:
             end_time = time.perf_counter()
             duration_ms = round((end_time - start_time) * 1000, 2)
-            tb = traceback.format_exc()
+            tb = e.details if isinstance(e, RemoteError) else traceback.format_exc()
             err_msg = str(e)
 
             hint = "Überprüfe das Dateiformat und stelle sicher, dass die Datei nicht beschädigt ist."
