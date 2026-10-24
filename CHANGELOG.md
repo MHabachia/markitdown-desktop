@@ -1,11 +1,12 @@
 # Changelog
 
-## Unreleased
+## 1.1.2
 
 - Das Zeitlimit gilt jetzt im Backend: Eine hängende Datei wird wirklich abgebrochen, statt im Hintergrund weiterzulaufen, und die Fehlermeldung nennt das Limit.
 - „Data-URIs behalten“ in den Einstellungen wirkt jetzt tatsächlich.
 - Ordner-Überwachung: Eine Datei, die nicht umgewandelt werden kann, wird nicht mehr jede Sekunde neu versucht (erst wieder, wenn sie sich ändert). Die Überwachung versteht dieselben Dateitypen wie die App, nutzt deine Einstellungen und trägt Ergebnisse in den Verlauf ein.
 - Bilder ohne erkannten Text ergeben nur noch einen kurzen Hinweis statt einer Tabelle mit lokalem Dateipfad; das spart Tokens.
+- Sicherheit: Pillow 13 (behebt mehrere teils kritische Lücken in der Bildverarbeitung), neueres certifi und OpenTelemetry sowie aktualisierte TLS-Pakete im Updater.
 - Dependabot ist entfernt, Abhängigkeiten werden von Hand aktualisiert.
 
 ## 1.1.1
