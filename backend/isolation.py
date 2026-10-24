@@ -33,7 +33,10 @@ class RemoteError(Exception):
 
 
 def _worker_main(conn) -> None:
+    import os
+
     from markitdown import MarkItDown
+    from backend.ocr_service import IMAGE_EXTENSIONS, extract_image_visual_markdown
 
     md = MarkItDown(enable_plugins=False)
     conn.send(("ready",))
@@ -47,7 +50,11 @@ def _worker_main(conn) -> None:
         path, keep_data_uris = job
         try:
             result = md.convert(path, keep_data_uris=keep_data_uris)
-            conn.send(("ok", result.text_content or "", getattr(result, "title", None)))
+            # Text recognition runs here too, so the timeout and the kill cover it.
+            image_info = None
+            if os.path.splitext(path)[1].lower() in IMAGE_EXTENSIONS:
+                image_info = extract_image_visual_markdown(path)
+            conn.send(("ok", result.text_content or "", getattr(result, "title", None), image_info))
         except BaseException as e:  # a converter may raise anything; the parent decides what to show
             conn.send(("error", str(e) or type(e).__name__, traceback.format_exc()))
 
@@ -104,8 +111,8 @@ class ConversionPool:
         with self._lock:
             self._idle.append(worker)
 
-    def convert(self, path: str, keep_data_uris: bool, timeout: float) -> Tuple[str, Optional[str]]:
-        """Returns (markdown, title). Raises ConversionTimeout, WorkerCrashed or RemoteError."""
+    def convert(self, path: str, keep_data_uris: bool, timeout: float) -> Tuple[str, Optional[str], Optional[dict]]:
+        """Returns (markdown, title, image_info for images or None). Raises ConversionTimeout, WorkerCrashed or RemoteError."""
         with self._slots:
             worker = self._take()
             try:
@@ -122,7 +129,7 @@ class ConversionPool:
 
             if message[0] == "ok":
                 self._give_back(worker)
-                return message[1], message[2]
+                return message[1], message[2], message[3]
             self._give_back(worker)
             raise RemoteError(message[1], message[2])
 

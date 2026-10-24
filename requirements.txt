@@ -30,6 +30,12 @@ click==8.5.0
     #   uvicorn
 cobble==0.1.4
     # via mammoth
+colorama==0.4.6 ; sys_platform == 'win32'
+    # via
+    #   colorlog
+    #   tqdm
+colorlog==6.12.0
+    # via rapidocr
 cryptography==50.0.2
     # via pdfminer-six
 defusedxml==0.7.1
@@ -71,13 +77,20 @@ numpy==2.5.3
     # via
     #   magika
     #   onnxruntime
+    #   opencv-python-headless
     #   pandas
+    #   rapidocr
+    #   shapely
 olefile==0.47
     # via markitdown
+omegaconf==2.4.0
+    # via rapidocr
 onnxruntime==1.30.0
     # via
     #   -r requirements.in
     #   magika
+opencv-python-headless==5.0.0.93
+    # via rapidocr
 openpyxl==3.1.5
     # via markitdown
 opentelemetry-api==1.45.1
@@ -96,8 +109,11 @@ pillow==13.0.0
     # via
     #   pdfplumber
     #   python-pptx
+    #   rapidocr
 protobuf==7.36.2
     # via onnxruntime
+pyclipper==1.4.0
+    # via rapidocr
 pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
 pydantic==2.13.5
@@ -112,16 +128,29 @@ python-dotenv==1.2.4
     # via magika
 python-pptx==1.0.2
     # via markitdown
+pyyaml==6.0.3
+    # via
+    #   omegaconf
+    #   rapidocr
+rapidocr==3.10.0
+    # via -r requirements.in
 requests==2.34.2
-    # via markitdown
+    # via
+    #   markitdown
+    #   rapidocr
+shapely==2.2.0
+    # via rapidocr
 six==1.17.0
     # via
     #   markdownify
     #   python-dateutil
+    #   rapidocr
 soupsieve==2.10
     # via beautifulsoup4
 starlette==1.7.0
     # via fastapi
+tqdm==4.70.1
+    # via rapidocr
 typing-extensions==4.16.0
     # via
     #   anyio

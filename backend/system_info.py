@@ -6,6 +6,7 @@ and reports capability status for each document format.
 
 import sys
 import importlib
+import importlib.util
 import platform
 import os
 from typing import Dict, Any, List
@@ -45,6 +46,13 @@ def check_module_available(module_name: str) -> bool:
     except Exception:
         return False
 
+def module_installed(module_name: str) -> bool:
+    """Whether a module can be found, without importing it (OCR pulls in OpenCV and onnxruntime)."""
+    try:
+        return importlib.util.find_spec(module_name) is not None
+    except (ImportError, ValueError):
+        return False
+
 def get_format_capabilities() -> List[Dict[str, Any]]:
     """
     Returns list of all formats supported by MarkItDown and their current readiness status.
@@ -54,7 +62,7 @@ def get_format_capabilities() -> List[Dict[str, Any]]:
     pptx_ready = check_module_available("pptx")
     xlsx_ready = check_module_available("openpyxl") or check_module_available("pandas")
     html_ready = check_module_available("bs4")
-    image_ready = check_module_available("PIL")
+    image_ready = check_module_available("PIL") and module_installed("rapidocr")
 
     return [
         {
@@ -140,11 +148,11 @@ def get_format_capabilities() -> List[Dict[str, Any]]:
         },
         {
             "id": "image",
-            "name": "Bilder (Metadaten)",
+            "name": "Bilder (Texterkennung)",
             "extensions": [".jpg", ".jpeg", ".png", ".webp"],
             "status": "ready" if image_ready else "needs_dependency",
-            "dependency": "Pillow",
-            "description": "Liest Metadaten wie EXIF-Angaben aus Bildern aus.",
+            "dependency": "RapidOCR / Pillow",
+            "description": "Liest Text aus Fotos und Screenshots mit eingebauter Texterkennung, komplett offline.",
             "category": "Medien"
         },
         {
@@ -198,5 +206,6 @@ def get_system_diagnostics() -> Dict[str, Any]:
             "pandas": get_installed_version("pandas"),
             "beautifulsoup4": get_installed_version("beautifulsoup4"),
             "Pillow": get_installed_version("Pillow"),
+            "RapidOCR": get_installed_version("rapidocr"),
         }
     }

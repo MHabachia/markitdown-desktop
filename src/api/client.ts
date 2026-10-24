@@ -84,11 +84,11 @@ export const DEFAULT_CAPABILITIES: FormatCapability[] = [
   },
   {
     id: 'image',
-    name: 'Bilder (Metadaten)',
+    name: 'Bilder (Texterkennung)',
     extensions: ['.jpg', '.jpeg', '.png', '.webp'],
     status: 'ready',
-    dependency: 'Pillow',
-    description: 'Liest Metadaten wie EXIF-Angaben aus Bildern aus.',
+    dependency: 'RapidOCR / Pillow',
+    description: 'Liest Text aus Fotos und Screenshots mit eingebauter Texterkennung, komplett offline.',
     category: 'Medien'
   },
   {

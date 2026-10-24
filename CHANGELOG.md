@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- Neu: Texterkennung für Bilder. Fotos und Screenshots (PNG, JPG, WebP, BMP) werden jetzt gelesen, auf Deutsch und Englisch, komplett offline. Dafür muss nichts installiert werden, die Erkennung ist in der App eingebaut. Bilder ohne Text ergeben einen kurzen Hinweis.
+- Dafür ist die App größer geworden: Das macOS-Paket wächst von etwa 91 auf 189 MB. Updates laden entsprechend mehr herunter.
+- Die Erkennung läuft wie die Umwandlung in einem eigenen Prozess und fällt unter das Zeitlimit.
+- Der Build prüft jetzt vor dem Paketieren, dass eine Textdatei und ein Bild mit Text im gepackten Backend umgewandelt werden.
+
 ## 1.1.3
 
 - Windows: Der Installer und der Deinstaller zeigen jetzt das App-Icon statt des Standard-Symbols.

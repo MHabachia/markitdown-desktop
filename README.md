@@ -32,7 +32,7 @@ Sonst noch drin: Dateinamen-Muster wie `{date}_{name}.md`, Regeln für bereits v
 
 ## Formate
 
-PDF, Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`, `.xls`), HTML, CSV/TSV, JSON, XML, Text- und YAML-Dateien, Jupyter-Notebooks, ZIP-Archive und Bilder (dort werden die Metadaten ausgelesen). Audio-Transkription habe ich weggelassen, weil sie die App um ein Vielfaches größer machen würde.
+PDF, Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`, `.xls`), HTML, CSV/TSV, JSON, XML, Text- und YAML-Dateien, Jupyter-Notebooks, ZIP-Archive und Bilder (Fotos und Screenshots werden per eingebauter Texterkennung gelesen, komplett offline). Audio-Transkription habe ich weggelassen, weil sie die App um ein Vielfaches größer machen würde.
 
 ## Selbst bauen
 

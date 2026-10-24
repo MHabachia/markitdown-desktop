@@ -26,9 +26,8 @@ except ImportError:
     MarkItDown = None
 
 from backend.isolation import ConversionPool, ConversionTimeout, RemoteError
-from backend.ocr_service import extract_image_visual_markdown
+from backend.ocr_service import IMAGE_EXTENSIONS, extract_image_visual_markdown
 
-IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
 _UNSAFE_NAME_CHARS = re.compile(r'[\x00-\x1f<>:"/\\|?*]')
 
 
@@ -177,17 +176,19 @@ class ConversionEngine:
             }
 
         try:
+            image_info = None
             if timeout is None:
                 result = self.md.convert(str(source_p), keep_data_uris=keep_data_uris)
                 markdown_content = result.text_content or ""
                 doc_title = getattr(result, "title", None)
             else:
-                markdown_content, doc_title = self._pool.convert(str(source_p), keep_data_uris, timeout)
+                markdown_content, doc_title, image_info = self._pool.convert(str(source_p), keep_data_uris, timeout)
 
             # Images: add OCR text if available. Anything else that produced no text gets a short note.
             ext = source_p.suffix.lower()
             if ext in IMAGE_EXTENSIONS:
-                image_info = extract_image_visual_markdown(str(source_p))
+                if image_info is None:
+                    image_info = extract_image_visual_markdown(str(source_p))
                 if not markdown_content.strip():
                     markdown_content = image_info.get("markdown", "")
                 elif image_info.get("has_ocr"):

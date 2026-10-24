@@ -20,7 +20,7 @@ class TestConversionPool(unittest.TestCase):
             with tempfile.TemporaryDirectory() as tmp:
                 src = pathlib.Path(tmp) / "a.txt"
                 src.write_text("Hallo Welt", encoding="utf-8")
-                text, _ = pool.convert(str(src), False, timeout=60)
+                text, _, _ = pool.convert(str(src), False, timeout=60)
                 self.assertIn("Hallo Welt", text)
                 worker = pool._idle[0]
                 pool.convert(str(src), False, timeout=60)
@@ -140,6 +140,93 @@ class TestEmptyResults(unittest.TestCase):
         self.assertNotIn("Bild", res["markdown"])
 
 
+GERMAN_LINES = [
+    "Übung 3: Größenordnung der Gebühren",
+    "Die Prüfung findet am 14. März 2027 statt.",
+    "Zusammenfassung für Studenten (Seite 12)",
+    "Preis: 1.250,00 € – inkl. 19 % MwSt.",
+]
+FONT_CANDIDATES = [
+    "/System/Library/Fonts/Supplemental/Arial.ttf",
+    "C:/Windows/Fonts/arial.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+]
+
+
+ENGLISH_LINES = [
+    "The quick brown fox jumps over the lazy dog.",
+    "Machine learning models require large amounts of training data.",
+    "Deadline: March 14th, 2027 - please submit your assignment.",
+]
+MIXED_LINES = [
+    "Die Vorlesung 'Introduction to Algorithms' beginnt um 10:15 Uhr.",
+    "Bitte lest Chapter 4 (Dynamic Programming) vor dem Meeting.",
+]
+
+
+def _german_text_image(folder: str, lines=None, name: str = "deutsch.png"):
+    """A picture of the lines (default: GERMAN_LINES), or None if the computer has no font with umlauts."""
+    lines = GERMAN_LINES if lines is None else lines
+    from PIL import Image, ImageDraw, ImageFont
+    font_path = next((f for f in FONT_CANDIDATES if os.path.exists(f)), None)
+    if font_path is None:
+        return None
+    font = ImageFont.truetype(font_path, 38)
+    width = int(max(font.getlength(line) for line in lines)) + 80  # wide fonts must not clip a line
+    img = Image.new("RGB", (width, 60 + len(lines) * 75), "white")
+    draw = ImageDraw.Draw(img)
+    for i, line in enumerate(lines):
+        draw.text((30, 25 + i * 75), line, fill="black", font=font)
+    path = os.path.join(folder, name)
+    img.save(path)
+    return path
+
+
+class TestGermanOcr(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.image = _german_text_image(self._tmp.name)
+        if self.image is None:
+            self.skipTest("keine Schrift mit Umlauten gefunden")
+
+    def test_reads_german_text_in_process(self):
+        res = ConversionEngine().convert_file(self.image, save=False)
+        self.assertTrue(res["success"])
+        text = res["markdown"]
+        for word in ("Größenordnung", "Prüfung", "März", "Zusammenfassung", "MwSt"):
+            self.assertIn(word, text)
+        self.assertNotIn(self._tmp.name, text)
+
+    def test_reads_german_text_in_worker_process(self):
+        engine = ConversionEngine()
+        try:
+            res = engine.convert_file(self.image, save=False, timeout=120)
+        finally:
+            engine._pool.shutdown()
+        self.assertTrue(res["success"])
+        self.assertIn("Größenordnung", res["markdown"])
+        self.assertIn("14. März 2027", res["markdown"])
+
+    def test_reads_english_and_mixed_text(self):
+        engine = ConversionEngine()
+        for lines in (ENGLISH_LINES, MIXED_LINES):
+            image = _german_text_image(self._tmp.name, lines, name=f"t{len(lines)}.png")
+            text = engine.convert_file(image, save=False)["markdown"]
+            squeezed = text.lower().replace(" ", "")
+            for line in lines:
+                self.assertIn(line.lower().replace(" ", ""), squeezed, line)
+
+    def test_blank_image_gives_the_short_note(self):
+        from PIL import Image
+        blank = os.path.join(self._tmp.name, "leer.png")
+        Image.new("RGB", (300, 120), "white").save(blank)
+        res = ConversionEngine().convert_file(blank, save=False)
+        self.assertTrue(res["success"])
+        self.assertIn("kein Text erkannt", res["markdown"])
+
+
 class TestImageFallback(unittest.TestCase):
     def test_note_has_no_path_and_no_metadata_table(self):
         from unittest import mock
@@ -148,13 +235,13 @@ class TestImageFallback(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, "foto.png")
             Image.new("RGB", (4, 3)).save(path)
-            with mock.patch.object(ocr_service, "run_local_ocr_if_available", return_value=None):
+            with mock.patch.object(ocr_service, "run_ocr", return_value=None):
                 out = ocr_service.extract_image_visual_markdown(path)
             self.assertFalse(out["has_ocr"])
             self.assertIn("foto.png", out["markdown"])
             self.assertNotIn(tmp, out["markdown"])
             self.assertNotIn("|", out["markdown"])
-            with mock.patch.object(ocr_service, "run_local_ocr_if_available", return_value="Erkannter Text"):
+            with mock.patch.object(ocr_service, "run_ocr", return_value="Erkannter Text"):
                 out = ocr_service.extract_image_visual_markdown(path)
             self.assertEqual(out["markdown"].strip(), "Erkannter Text")
 

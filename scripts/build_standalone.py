@@ -30,7 +30,7 @@ def get_target_triple() -> str:
 
 METADATA_PACKAGES = [
     "markitdown", "fastapi", "uvicorn", "pdfminer.six", "mammoth", "python-pptx",
-    "openpyxl", "pandas", "beautifulsoup4", "Pillow",
+    "openpyxl", "pandas", "beautifulsoup4", "Pillow", "rapidocr",
 ]
 
 
@@ -110,6 +110,8 @@ def main():
         "--hidden-import", "pdfminer",
         "--hidden-import", "PIL",
         "--collect-all", "markitdown",
+        # text recognition: the models and config files are data files inside the package
+        "--collect-all", "rapidocr",
         # example documents for "Mit Beispielen ausprobieren"
         "--add-data", f"{ROOT_DIR / 'backend' / 'sample_files'}{os.pathsep}backend/sample_files",
         *metadata_args(),

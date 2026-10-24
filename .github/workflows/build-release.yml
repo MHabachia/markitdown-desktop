@@ -118,8 +118,10 @@ jobs:
             if curl -sf http://127.0.0.1:18765/api/health > /dev/null; then ok=1; break; fi
             sleep 2
           done
+          [ "$ok" = "1" ] || { kill $! 2>/dev/null || true; echo "Standalone backend did not start"; exit 1; }
+          # a text file and a picture of text: catches a missing converter or OCR model in the bundle
+          python scripts/smoke_convert.py 18765 || { kill $! 2>/dev/null || true; exit 1; }
           kill $! 2>/dev/null || true
-          [ "$ok" = "1" ] || { echo "Standalone backend did not start"; exit 1; }
 
       # Installers are not code-signed (macOS gets an ad-hoc signature from tauri.conf.json).
       # Update bundles are signed with TAURI_SIGNING_PRIVATE_KEY so installed apps accept them.
