@@ -138,6 +138,12 @@ jobs:
           fi
           npx tauri build $ARGS
 
+      # LZMA instead of the default zlib: the dmg gets about 20 % smaller. The script checks that
+      # the result mounts and that the app inside is still validly signed.
+      - name: Repack the dmg (macOS)
+        if: runner.os == 'macOS'
+        run: scripts/compress_dmg.sh src-tauri/target/release/bundle/dmg/*.dmg
+
       - name: Launch test (macOS)
         if: runner.os == 'macOS'
         run: |

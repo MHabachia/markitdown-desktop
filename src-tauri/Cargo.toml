@@ -1,6 +1,6 @@
 [package]
 name = "markitdown-desktop"
-version = "1.2.0"
+version = "1.2.1"
 description = "Converts documents to Markdown locally with Microsoft MarkItDown"
 authors = ["MHabachia"]
 license = "MIT"

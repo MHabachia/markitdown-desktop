@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- Das macOS-Paket ist etwa 20 % kleiner (rund 160 statt 200 MB), weil das Disk-Image jetzt mit LZMA gepackt wird. Dafür braucht es macOS 10.15 oder neuer. Der Build prüft vor dem Hochladen, dass das Image sich öffnen lässt und die App darin gültig signiert ist.
+
 ## 1.2.0
 
 - Neu: Texterkennung für Bilder. Fotos und Screenshots (PNG, JPG, WebP, BMP) werden jetzt gelesen, auf Deutsch und Englisch, komplett offline. Dafür muss nichts installiert werden, die Erkennung ist in der App eingebaut. Bilder ohne Text ergeben einen kurzen Hinweis.
