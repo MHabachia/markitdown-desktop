@@ -1,0 +1,28 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default permissions. External links are limited to the project's and MarkItDown's GitHub pages.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-destroy",
+    "dialog:allow-ask",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "updater:default",
+    "process:allow-restart",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://github.com/MHabachia/markitdown-desktop*"
+        },
+        {
+          "url": "https://github.com/microsoft/markitdown*"
+        }
+      ]
+    }
+  ]
+}

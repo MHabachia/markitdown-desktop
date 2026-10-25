@@ -1,0 +1,18 @@
+{
+  "app": "MarkItDown Desktop",
+  "version": "1.0.0",
+  "engine": "Microsoft MarkItDown 0.1.8",
+  "features": {
+    "batch_processing": true,
+    "offline_privacy": true,
+    "markdown_split_view": true,
+    "custom_collision_strategy": true
+  },
+  "supported_categories": [
+    "Documents",
+    "Spreadsheets",
+    "Presentations",
+    "Web",
+    "Code"
+  ]
+}

@@ -1,0 +1,221 @@
+name: Build & Release
+
+# Builds the macOS (Apple Silicon) and Windows installers once "Tests" passed
+# for a push to main. If the version in package.json has no release yet, the installers
+# are published as release v<version> together with the auto-update manifest.
+# To ship a new version: raise the version (package.json, src-tauri/tauri.conf.json,
+# src-tauri/Cargo.toml), add a CHANGELOG.md section, push to main.
+on:
+  workflow_run:
+    workflows: [ Tests ]
+    types: [ completed ]
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-release
+  cancel-in-progress: false
+
+env:
+  # workflow_run starts on the default branch tip; build exactly the commit that was tested.
+  BUILD_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+jobs:
+  plan:
+    name: Version and release plan
+    # only after a successful "Tests" run for a push to main (or when started by hand)
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      tag: ${{ steps.plan.outputs.tag }}
+      release: ${{ steps.plan.outputs.release }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.BUILD_SHA }}
+      - id: plan
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAURI=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          CARGO=$(grep -m1 '^version = ' src-tauri/Cargo.toml | cut -d'"' -f2)
+          if [ "$VERSION" != "$TAURI" ] || [ "$VERSION" != "$CARGO" ]; then
+            echo "::error::Version mismatch: package.json=$VERSION tauri.conf.json=$TAURI Cargo.toml=$CARGO"
+            exit 1
+          fi
+          TAG="v$VERSION"
+          RELEASE=false
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" > /dev/null 2>&1; then
+            echo "$TAG already released; this run only builds the installers."
+          else
+            RELEASE=true
+            echo "New version $TAG will be released."
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "release=$RELEASE" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.platform }}
+    needs: [ plan ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-aarch64
+            os: macos-latest
+          - platform: windows-x86_64
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ needs.plan.outputs.tag }}
+      TARGET_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      # secrets cannot be used in `if:`; expose only whether the key exists
+      HAS_UPDATER_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.BUILD_SHA }}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: requirements-build.txt
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: 'npm'
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+
+      - name: Build standalone backend
+        run: |
+          pip install -r requirements-build.txt
+          python scripts/build_standalone.py
+
+      - name: Smoke-test standalone backend
+        run: |
+          BIN=src-tauri/binaries/backend-service/backend-service
+          [ -f "$BIN.exe" ] && BIN="$BIN.exe"
+          MARKITDOWN_PORT=18765 MARKITDOWN_DATA_DIR="$RUNNER_TEMP/smoke" "$BIN" &
+          ok=0
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:18765/api/health > /dev/null; then ok=1; break; fi
+            sleep 2
+          done
+          [ "$ok" = "1" ] || { kill $! 2>/dev/null || true; echo "Standalone backend did not start"; exit 1; }
+          # a text file and a picture of text: catches a missing converter or OCR model in the bundle
+          python scripts/smoke_convert.py 18765 || { kill $! 2>/dev/null || true; exit 1; }
+          kill $! 2>/dev/null || true
+
+      # Installers are not code-signed (macOS gets an ad-hoc signature from tauri.conf.json).
+      # Update bundles are signed with TAURI_SIGNING_PRIVATE_KEY so installed apps accept them.
+      - name: Build app
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          ARGS="--config src-tauri/tauri.sidecar.conf.json"
+          if [ "$HAS_UPDATER_KEY" = "true" ]; then
+            ARGS="$ARGS --config src-tauri/tauri.updater.conf.json"
+          else
+            unset TAURI_SIGNING_PRIVATE_KEY
+          fi
+          npx tauri build $ARGS
+
+      # LZMA instead of the default zlib: the dmg gets about 20 % smaller. The script checks that
+      # the result mounts and that the app inside is still validly signed.
+      - name: Repack the dmg (macOS)
+        if: runner.os == 'macOS'
+        run: scripts/compress_dmg.sh src-tauri/target/release/bundle/dmg/*.dmg
+
+      - name: Launch test (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          APP="src-tauri/target/release/bundle/macos/MarkItDown Desktop.app"
+          LOG="$HOME/Library/Logs/io.github.mhabachia.markitdown/backend.log"
+          rm -f "$LOG"
+          open -n "$APP"
+          ok=0
+          for i in $(seq 1 60); do
+            sleep 2
+            if [ -f "$LOG" ] && grep -q "Application startup complete" "$LOG"; then ok=1; break; fi
+          done
+          [ -f "$LOG" ] && tail -n 20 "$LOG"
+          pkill -f "MarkItDown Desktop.app/Contents/MacOS/" || true
+          [ "$ok" = "1" ] || { echo "App did not bring the backend up"; exit 1; }
+
+      - name: Launch test (Windows, installed app)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $setup = (Get-ChildItem src-tauri/target/release/bundle/nsis -Filter *-setup.exe | Select-Object -First 1).FullName
+          Start-Process -FilePath $setup -ArgumentList '/S' -Wait
+          $app = Get-ChildItem $env:LOCALAPPDATA -Recurse -Filter markitdown-desktop.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $app) { throw 'Installierte markitdown-desktop.exe nicht gefunden' }
+          $proc = Start-Process -FilePath $app.FullName -PassThru
+          $log = Join-Path $env:LOCALAPPDATA 'io.github.mhabachia.markitdown\logs\backend.log'
+          $ok = $false
+          for ($i = 0; $i -lt 60; $i++) {
+            Start-Sleep -Seconds 2
+            if ($proc.HasExited) { break }
+            if ((Test-Path $log) -and (Select-String -Path $log -Pattern 'Application startup complete' -Quiet)) { $ok = $true; break }
+          }
+          $crash = Join-Path $env:TEMP 'markitdown-desktop-crash.log'
+          if (Test-Path $crash) { Write-Host '--- crash log ---'; Get-Content $crash }
+          if (Test-Path $log) { Write-Host '--- backend log ---'; Get-Content $log -Tail 30 }
+          if ($proc.HasExited) { Write-Host "App beendet, Exit-Code $($proc.ExitCode)"; throw 'App ist abgestürzt' }
+          Stop-Process -Id $proc.Id -Force
+          if (-not $ok) { throw 'Backend ist nicht hochgekommen' }
+
+      - name: Upload installers to the release draft
+        if: needs.plan.outputs.release == 'true'
+        run: |
+          shopt -s nullglob
+          B=src-tauri/target/release/bundle
+          scripts/publish_release.sh ${{ matrix.platform }} \
+            $B/dmg/*.dmg $B/macos/*.app.tar.gz $B/macos/*.app.tar.gz.sig \
+            $B/nsis/*-setup.exe $B/nsis/*-setup.exe.sig
+
+  publish:
+    name: Publish release ${{ needs.plan.outputs.tag }}
+    needs: [ plan, build ]
+    if: needs.plan.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ needs.plan.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.BUILD_SHA }}
+      - name: Write update manifest and publish
+        run: |
+          mkdir sigs
+          gh release download "$TAG" --pattern '*.sig' --dir sigs || true
+          python3 scripts/update_manifest.py "$TAG" sigs latest.json
+          if [ -f latest.json ]; then gh release upload "$TAG" latest.json --clobber; fi
+          # The signatures now live inside latest.json; the release keeps only the installers,
+          # the macOS update bundle and latest.json.
+          for name in $(gh release view "$TAG" --json assets --jq '.assets[].name | select(endswith(".sig"))'); do
+            gh release delete-asset "$TAG" "$name" --yes
+          done
+          # Publishing the draft creates the tag on the commit it was built from.
+          gh release edit "$TAG" --draft=false --latest

@@ -1,0 +1,7 @@
+MarkItDown Desktop - Notizen & Schnellstart
+===========================================
+
+Microsoft MarkItDown konvertiert verschiedenste Dokumentformate lokal und verlustarm in sauberes Markdown.
+- 100% lokale Ausführung ohne externen Server
+- Stapelverarbeitung für hunderte Dokumente
+- Integrierte Vorschau mit Syntax-Highlighting und Wortzähler

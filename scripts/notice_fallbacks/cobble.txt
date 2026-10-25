@@ -1,0 +1,3 @@
+Das Paket cobble (Autor: Michael Williamson) enthält keine eigene Lizenzdatei.
+Laut Projektbeschreibung steht es unter der 2-Clause-BSD-Lizenz:
+http://opensource.org/licenses/BSD-2-Clause
