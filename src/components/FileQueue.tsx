@@ -6,6 +6,7 @@ import { FILE_MANAGER, shortcut } from '../utils/platform';
 import { FileIcon } from './FileIcon';
 import { IconButton } from './IconButton';
 import { Stepper, StepState } from './Stepper';
+import { useApp } from '../context/AppContext';
 
 export type ViewMode = 'grid' | 'list';
 
@@ -25,7 +26,6 @@ interface FileQueueProps {
   onSaveAll: () => void;
   onRemoveFile: (id: string) => void;
   onClearAll: () => void;
-  onOpenFolder: (path: string) => void;
   onShowErrorDetails: (file: FileItem) => void;
   onAddFilesClick: () => void;
   onAddFolderClick: () => void;
@@ -66,6 +66,7 @@ const stop = (fn: () => void) => (e: React.MouseEvent) => {
 };
 
 export const FileQueue: React.FC<FileQueueProps> = (props) => {
+  const { openFolder } = useApp();
   const { files, filter, viewMode, selectedId, isConverting, onConvertAll, onSaveAll, onClearAll, onExportZip } = props;
 
   const counts = useMemo(() => {
@@ -93,7 +94,7 @@ export const FileQueue: React.FC<FileQueueProps> = (props) => {
     }
   ];
 
-  const actions: ItemActions = props;
+  const actions: ItemActions = { ...props, onOpenFolder: openFolder };
 
   return (
     <div className="queue">

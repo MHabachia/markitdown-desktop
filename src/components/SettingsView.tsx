@@ -2,25 +2,17 @@ import React from 'react';
 import { RefreshCw, Trash2 } from 'lucide-react';
 import { AppSettings, SystemDiagnostics } from '../types';
 import { Checkbox, NumberField, TEMPLATE_PRESETS, TextField } from './fields';
+import { useApp } from '../context/AppContext';
 
 interface SettingsViewProps {
-  settings: AppSettings;
-  onUpdateSettings: (newSettings: Partial<AppSettings>) => void;
   diagnostics: SystemDiagnostics | null;
   onRefreshDiagnostics: () => void;
   onClearHistory: () => void;
-  onNotify: (msg: string, type?: 'success' | 'info' | 'error') => void;
 }
 
 
-export const SettingsView: React.FC<SettingsViewProps> = ({
-  settings,
-  onUpdateSettings,
-  diagnostics,
-  onRefreshDiagnostics,
-  onClearHistory,
-  onNotify
-}) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ diagnostics, onRefreshDiagnostics, onClearHistory }) => {
+  const { settings, updateSettings, notify } = useApp();
 
   return (
     <div className="settings-container">
@@ -29,7 +21,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <TextField
             value={settings.default_output_dir}
             placeholder="Neben dem Original"
-            onCommit={(v) => onUpdateSettings({ default_output_dir: v })}
+            onCommit={(v) => updateSettings({ default_output_dir: v })}
           />
         </Row>
         <Row title="Dateiname" description="Platzhalter: {name}, {date}, {time}, {ext}">
@@ -37,11 +29,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <TextField
               value={settings.filename_template || '{name}.md'}
               placeholder="{name}.md"
-              onCommit={(v) => onUpdateSettings({ filename_template: v || '{name}.md' })}
+              onCommit={(v) => updateSettings({ filename_template: v || '{name}.md' })}
             />
             <div className="chip-row">
               {TEMPLATE_PRESETS.map((tpl) => (
-                <button key={tpl} type="button" className="chip" onClick={() => onUpdateSettings({ filename_template: tpl })}>
+                <button key={tpl} type="button" className="chip" onClick={() => updateSettings({ filename_template: tpl })}>
                   {tpl}
                 </button>
               ))}
@@ -51,7 +43,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <Row title="Wenn die Datei schon existiert">
           <select
             value={settings.collision_strategy}
-            onChange={(e) => onUpdateSettings({ collision_strategy: e.target.value as AppSettings['collision_strategy'] })}
+            onChange={(e) => updateSettings({ collision_strategy: e.target.value as AppSettings['collision_strategy'] })}
           >
             <option value="rename">Nummerieren (datei (1).md)</option>
             <option value="overwrite">Überschreiben</option>
@@ -65,7 +57,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <Row title="Gleichzeitige Konvertierungen">
           <select
             value={settings.concurrency_limit || 4}
-            onChange={(e) => onUpdateSettings({ concurrency_limit: parseInt(e.target.value, 10) || 4 })}
+            onChange={(e) => updateSettings({ concurrency_limit: parseInt(e.target.value, 10) || 4 })}
           >
             <option value="1">1</option>
             <option value="2">2</option>
@@ -78,7 +70,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             value={settings.timeout_seconds}
             min={1}
             max={3600}
-            onCommit={(v) => onUpdateSettings({ timeout_seconds: v })}
+            onCommit={(v) => updateSettings({ timeout_seconds: v })}
           />
         </Row>
         <Row title="Nach dem Umwandeln" description="Standard: Ergebnis erst prüfen, dann speichern.">
@@ -86,22 +78,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <Checkbox
               checked={settings.open_preview_after_convert}
               label="Ergebnis in der Vorschau zeigen"
-              onChange={(v) => onUpdateSettings({ open_preview_after_convert: v })}
+              onChange={(v) => updateSettings({ open_preview_after_convert: v })}
             />
             <Checkbox
               checked={settings.auto_save_after_convert}
               label="Automatisch speichern (ohne Prüfen)"
-              onChange={(v) => onUpdateSettings({ auto_save_after_convert: v })}
+              onChange={(v) => updateSettings({ auto_save_after_convert: v })}
             />
             <Checkbox
               checked={settings.open_output_after_convert}
               label="Zielordner nach dem Speichern öffnen"
-              onChange={(v) => onUpdateSettings({ open_output_after_convert: v })}
+              onChange={(v) => updateSettings({ open_output_after_convert: v })}
             />
           </div>
         </Row>
         <Row title="Eingebettete Bilder" description="Bilder als Data-URI in der Markdown-Datei behalten.">
-          <Checkbox checked={settings.keep_data_uris} label="Behalten" onChange={(v) => onUpdateSettings({ keep_data_uris: v })} />
+          <Checkbox checked={settings.keep_data_uris} label="Behalten" onChange={(v) => updateSettings({ keep_data_uris: v })} />
         </Row>
       </Section>
 
@@ -111,13 +103,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           title="Automatisch nach Updates suchen"
           description="Fragt kurz nach dem Start bei GitHub nach einer neuen Version. Dabei werden keine Daten aus der App gesendet."
         >
-          <Checkbox checked={settings.check_updates} label="Aktiv" onChange={(v) => onUpdateSettings({ check_updates: v })} />
+          <Checkbox checked={settings.check_updates} label="Aktiv" onChange={(v) => updateSettings({ check_updates: v })} />
         </Row>
       </Section>
 
       <Section title="Darstellung">
         <Row title="Erscheinungsbild">
-          <select value={settings.theme} onChange={(e) => onUpdateSettings({ theme: e.target.value as AppSettings['theme'] })}>
+          <select value={settings.theme} onChange={(e) => updateSettings({ theme: e.target.value as AppSettings['theme'] })}>
             <option value="dark">Dunkel</option>
             <option value="light">Hell</option>
             <option value="system">System</option>
@@ -144,7 +136,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             className="btn-danger btn-sm"
             onClick={() => {
               onClearHistory();
-              onNotify('Verlauf geleert', 'info');
+              notify('Verlauf geleert', 'info');
             }}
           >
             <Trash2 size={13} aria-hidden="true" />

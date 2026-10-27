@@ -3,13 +3,12 @@ import { ExternalLink, FolderOpen, RotateCcw, Search, Trash2 } from 'lucide-reac
 import { HistoryItem } from '../types';
 import { formatDateTime, metaLine } from '../utils/format';
 import { IconButton } from './IconButton';
+import { useApp } from '../context/AppContext';
 
 interface HistoryViewProps {
   history: HistoryItem[];
   onClearHistory: () => void;
   onDeleteItem: (id: string) => void;
-  onOpenFolder: (path: string) => void;
-  onOpenFile: (path: string) => void;
   onReconvert: (sourcePath: string) => void;
 }
 
@@ -18,14 +17,8 @@ const extensionLabel = (name: string) => {
   return dot >= 0 ? name.slice(dot + 1).toUpperCase() : 'DATEI';
 };
 
-export const HistoryView: React.FC<HistoryViewProps> = ({
-  history,
-  onClearHistory,
-  onDeleteItem,
-  onOpenFolder,
-  onOpenFile,
-  onReconvert
-}) => {
+export const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDeleteItem, onReconvert }) => {
+  const { openFolder, openFile } = useApp();
   const [search, setSearch] = useState('');
 
   const visible = useMemo(() => {
@@ -90,7 +83,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                   <button
                     type="button"
                     className="btn-secondary btn-sm"
-                    onClick={() => item.target_path && onOpenFile(item.target_path)}
+                    onClick={() => item.target_path && openFile(item.target_path)}
                     disabled={failed || !item.target_path}
                     title="Markdown-Datei im Standardprogramm öffnen"
                   >
@@ -99,7 +92,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                   </button>
                   <IconButton
                     label="Im Ordner zeigen"
-                    onClick={() => item.target_path && onOpenFolder(item.target_path)}
+                    onClick={() => item.target_path && openFolder(item.target_path)}
                     disabled={!item.target_path}
                   >
                     <FolderOpen size={15} />

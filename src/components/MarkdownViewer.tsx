@@ -1,82 +1,54 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { 
-  X, 
-  Copy, 
-  Check, 
-  Save, 
-  ExternalLink, 
-  FolderOpen, 
-  Columns, 
-  FileText, 
-  Code, 
-  Search, 
-  Download,
-  Share2,
-  FileCode,
-  Printer,
-  Table,
-  Sparkles,
-  ListOrdered
-} from 'lucide-react';
-import { escapeHtml } from '../utils/format';
+import { Check, Copy, ExternalLink, FolderOpen, Save, Search, X } from 'lucide-react';
 import { shortcut } from '../utils/platform';
-import { IS_DESKTOP, pickExportTarget } from '../utils/desktop';
 import { blockLinkNavigation, renderMarkdown } from '../utils/markdown';
+import { countMatches, documentStats } from '../utils/editor';
 import { FileItem } from '../types';
-import { apiClient } from '../api/client';
+import { useApp } from '../context/AppContext';
+import { useContentTools } from '../hooks/useContentTools';
+import { useEditorExport } from '../hooks/useEditorExport';
+import { EditorFooter } from './editor/EditorFooter';
+import { ExportMenu } from './editor/ExportMenu';
+import { FormatTools } from './editor/FormatTools';
+import { SearchBar } from './editor/SearchBar';
+import { EditorViewMode, ViewModeTabs } from './editor/ViewModeTabs';
 
 interface MarkdownViewerProps {
   file: FileItem;
   onClose: () => void;
   /** Saves the edited content (overwrites the saved file, or saves it for the first time). */
   onSave: (content: string) => Promise<void>;
-  onOpenFile: (path: string) => void;
-  onOpenFolder: (path: string) => void;
-  onNotify: (msg: string, type?: 'success' | 'info' | 'error') => void;
 }
 
-export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
-  file,
-  onClose,
-  onSave,
-  onOpenFile,
-  onOpenFolder,
-  onNotify
-}) => {
+/** Full-screen editor with preview for one converted file. */
+export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ file, onClose, onSave }) => {
+  const { notify, openFile, openFolder } = useApp();
   const [content, setContent] = useState<string>(file.markdownContent || '');
   const [initialContent, setInitialContent] = useState<string>(file.markdownContent || '');
-  const [viewMode, setViewMode] = useState<'preview' | 'editor' | 'split'>('preview');
+  const [viewMode, setViewMode] = useState<EditorViewMode>('preview');
   const [isCopied, setIsCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [showExportMenu, setShowExportMenu] = useState(false);
 
   const hasUnsavedChanges = content !== initialContent;
-
-  // Stats calculation
-  const stats = useMemo(() => {
-    const chars = content.length;
-    const words = content.trim() ? content.trim().split(/\s+/).length : 0;
-    const lines = content.split('\n').length;
-    const readTimeMinutes = Math.max(1, Math.ceil(words / 200));
-    return { chars, words, lines, readTimeMinutes };
-  }, [content]);
-
+  const stats = useMemo(() => documentStats(content), [content]);
   const renderedHtml = useMemo(() => renderMarkdown(content), [content]);
+  const exporter = useEditorExport({ fileName: file.name, content, renderedHtml, notify });
+  const tools = useContentTools(content, setContent, notify);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
       await onSave(content);
       setInitialContent(content);
-      onNotify('Datei erfolgreich gespeichert!', 'success');
+      notify('Datei erfolgreich gespeichert!', 'success');
     } catch (e) {
-      onNotify(`Speichern fehlgeschlagen: ${e instanceof Error ? e.message : e}`, 'error');
+      notify(`Speichern fehlgeschlagen: ${e instanceof Error ? e.message : e}`, 'error');
     } finally {
       setIsSaving(false);
     }
-  }, [content, onSave, onNotify]);
+  }, [content, onSave, notify]);
 
   // Keyboard shortcut handler
   useEffect(() => {
@@ -105,112 +77,12 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
     try {
       await navigator.clipboard.writeText(content);
       setIsCopied(true);
-      onNotify('Markdown-Inhalt in Zwischenablage kopiert!', 'success');
+      notify('Markdown-Inhalt in Zwischenablage kopiert!', 'success');
       setTimeout(() => setIsCopied(false), 2000);
     } catch {
-      onNotify('Kopieren fehlgeschlagen', 'error');
+      notify('Kopieren fehlgeschlagen', 'error');
     }
   };
-
-  const handleCopyHtml = async () => {
-    try {
-      await navigator.clipboard.writeText(renderedHtml);
-      onNotify('Gerendertes HTML in Zwischenablage kopiert!', 'success');
-      setShowExportMenu(false);
-    } catch {
-      onNotify('HTML-Kopieren fehlgeschlagen', 'error');
-    }
-  };
-
-  /**
-   * Saves an export. The desktop app uses a "save as" dialog (a WebView ignores download
-   * links); the browser build falls back to a normal download.
-   */
-  const exportFile = async (data: string, extension: 'md' | 'html' | 'txt', mime: string) => {
-    const fileName = `${file.name.replace(/\.[^/.]+$/, '')}.${extension}`;
-    setShowExportMenu(false);
-    try {
-      if (IS_DESKTOP) {
-        const target = await pickExportTarget(fileName, extension);
-        if (!target) return; // dialog cancelled
-        await apiClient.saveFile(target, data);
-      } else {
-        const url = URL.createObjectURL(new Blob([data], { type: `${mime};charset=utf-8` }));
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(url);
-      }
-      onNotify(`${fileName} gespeichert`, 'success');
-    } catch (e) {
-      onNotify(`Export fehlgeschlagen: ${e instanceof Error ? e.message : e}`, 'error');
-    }
-  };
-
-  const handleDownloadMarkdown = () => exportFile(content, 'md', 'text/markdown');
-
-  const handleDownloadHtml = () =>
-    exportFile(
-      `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${escapeHtml(file.name)}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #111; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    th, td { border: 1px solid #ddd; padding: 8px 12px; }
-    th { background: #f4f4f4; }
-    pre { background: #f6f8fa; padding: 16px; border-radius: 6px; overflow-x: auto; }
-    code { font-family: ui-monospace, Menlo, Consolas, monospace; }
-  </style>
-</head>
-<body>
-${renderedHtml}
-</body>
-</html>`,
-      'html',
-      'text/html'
-    );
-
-  const handleDownloadTxt = () => exportFile(content, 'txt', 'text/plain');
-
-  const handlePrintPdf = () => {
-    setShowExportMenu(false);
-    window.print();
-  };
-
-  const handleFormatTables = async () => {
-    try {
-      const formatted = await apiClient.formatTables(content);
-      setContent(formatted);
-      onNotify('Markdown-Tabellen sauber ausgerichtet', 'success');
-    } catch {
-      onNotify('Tabellenformatierung fehlgeschlagen', 'error');
-    }
-  };
-
-  const handleCleanWhitespace = async () => {
-    try {
-      const cleaned = await apiClient.cleanWhitespace(content);
-      setContent(cleaned);
-      onNotify('Leerzeilen & Whitespace bereinigt', 'success');
-    } catch {
-      onNotify('Bereinigung fehlgeschlagen', 'error');
-    }
-  };
-
-  const handleInsertToc = async () => {
-    try {
-      const withToc = await apiClient.generateToc(content);
-      setContent(withToc);
-      onNotify('Inhaltsverzeichnis eingefügt', 'success');
-    } catch {
-      onNotify('TOC-Generierung fehlgeschlagen', 'error');
-    }
-  };
-
 
   return (
     <div className="markdown-modal-backdrop" onClick={onClose}>
@@ -233,71 +105,16 @@ ${renderedHtml}
           </div>
 
           <div className="editor-tools">
-            {/* View Mode Switcher */}
-            <div className="view-mode-tabs">
-              <button
-                type="button"
-                className={`view-mode-btn ${viewMode === 'preview' ? 'active' : ''}`}
-                onClick={() => setViewMode('preview')}
-                title="Gerenderte Vorschau"
-              >
-                <FileText size={13} style={{ display: 'inline', marginRight: 4 }} />
-                Vorschau
-              </button>
-              <button
-                type="button"
-                className={`view-mode-btn ${viewMode === 'editor' ? 'active' : ''}`}
-                onClick={() => setViewMode('editor')}
-                title="Markdown-Quelltext bearbeiten"
-              >
-                <Code size={13} style={{ display: 'inline', marginRight: 4 }} />
-                Quelltext
-              </button>
-              <button
-                type="button"
-                className={`view-mode-btn ${viewMode === 'split' ? 'active' : ''}`}
-                onClick={() => setViewMode('split')}
-                title="Geteilte Ansicht (Split-View)"
-              >
-                <Columns size={13} style={{ display: 'inline', marginRight: 4 }} />
-                Geteilt
-              </button>
-            </div>
+            <ViewModeTabs value={viewMode} onChange={setViewMode} />
 
-            {/* Quick Formatting Tools in Editor / Split Mode */}
             {viewMode !== 'preview' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', borderLeft: '1px solid var(--border-subtle)', paddingLeft: '8px' }}>
-                <button
-                  type="button"
-                  className="btn-ghost btn-sm"
-                  onClick={handleFormatTables}
-                  title="Markdown-Tabellen sauber ausrichten"
-                >
-                  <Table size={13} style={{ marginRight: 4 }} />
-                  Tabellen
-                </button>
-                <button
-                  type="button"
-                  className="btn-ghost btn-sm"
-                  onClick={handleCleanWhitespace}
-                  title="Überflüssige Leerzeilen & Whitespace bereinigen"
-                >
-                  <Sparkles size={13} style={{ marginRight: 4 }} />
-                  Bereinigen
-                </button>
-                <button
-                  type="button"
-                  className="btn-ghost btn-sm"
-                  onClick={handleInsertToc}
-                  title="Inhaltsverzeichnis (TOC) am Anfang generieren"
-                >
-                  <ListOrdered size={13} style={{ marginRight: 4 }} />
-                  +TOC
-                </button>
-              </div>
+              <FormatTools
+                onFormatTables={tools.formatTables}
+                onCleanWhitespace={tools.cleanWhitespace}
+                onInsertToc={tools.insertToc}
+              />
             )}
 
-            {/* Search Toggle */}
             <button
               type="button"
               className="btn-ghost btn-sm"
@@ -307,7 +124,6 @@ ${renderedHtml}
               <Search size={14} />
             </button>
 
-            {/* Copy Button */}
             <button
               type="button"
               className="btn-secondary btn-sm"
@@ -318,83 +134,14 @@ ${renderedHtml}
               {isCopied ? 'Kopiert' : 'Kopieren'}
             </button>
 
-            {/* Export Dropdown */}
-            <div style={{ position: 'relative' }}>
-              <button
-                type="button"
-                className="btn-secondary btn-sm"
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                title="Export-Optionen"
-              >
-                <Share2 size={13} />
-                Export
-              </button>
+            <ExportMenu
+              onSaveMarkdown={exporter.saveMarkdown}
+              onSaveHtml={exporter.saveHtml}
+              onSaveText={exporter.saveText}
+              onPrint={exporter.print}
+              onCopyHtml={exporter.copyHtml}
+            />
 
-              {showExportMenu && (
-                <div 
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: '100%',
-                    marginTop: '4px',
-                    width: '230px',
-                    backgroundColor: 'var(--bg-surface)',
-                    border: '1px solid var(--border-default)',
-                    borderRadius: '8px',
-                    boxShadow: 'var(--shadow-lg)',
-                    padding: '6px',
-                    zIndex: 50,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '3px'
-                  }}
-                >
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm"
-                    style={{ justifyContent: 'flex-start', width: '100%' }}
-                    onClick={handleDownloadMarkdown}
-                  >
-                    <Download size={13} /> Als Markdown speichern …
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm"
-                    style={{ justifyContent: 'flex-start', width: '100%' }}
-                    onClick={handleDownloadHtml}
-                  >
-                    <FileCode size={13} /> Als HTML speichern …
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm"
-                    style={{ justifyContent: 'flex-start', width: '100%' }}
-                    onClick={handleDownloadTxt}
-                  >
-                    <FileText size={13} /> Als Text speichern …
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm"
-                    style={{ justifyContent: 'flex-start', width: '100%' }}
-                    onClick={handlePrintPdf}
-                  >
-                    <Printer size={13} /> Als PDF drucken / speichern
-                  </button>
-                  <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)', margin: '4px 0' }} />
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm"
-                    style={{ justifyContent: 'flex-start', width: '100%' }}
-                    onClick={handleCopyHtml}
-                  >
-                    <Copy size={13} /> HTML in Zwischenablage
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Save Button */}
             {hasUnsavedChanges && (
               <button
                 type="button"
@@ -408,12 +155,11 @@ ${renderedHtml}
               </button>
             )}
 
-            {/* Native OS open */}
             {file.targetPath && (
               <button
                 type="button"
                 className="btn-ghost btn-sm"
-                onClick={() => onOpenFile(file.targetPath!)}
+                onClick={() => openFile(file.targetPath!)}
                 title="Im Standardprogramm öffnen"
               >
                 <ExternalLink size={14} />
@@ -424,14 +170,13 @@ ${renderedHtml}
               <button
                 type="button"
                 className="btn-ghost btn-sm"
-                onClick={() => onOpenFolder(file.targetPath!)}
+                onClick={() => openFolder(file.targetPath!)}
                 title="Im Dateimanager anzeigen"
               >
                 <FolderOpen size={14} />
               </button>
             )}
 
-            {/* Close Button */}
             <button
               type="button"
               className="btn-ghost btn-sm"
@@ -443,40 +188,16 @@ ${renderedHtml}
           </div>
         </div>
 
-        {/* Search Bar Overlay */}
         {showSearch && (
-          <div 
-            style={{ 
-              padding: '8px 16px', 
-              background: 'var(--bg-surface)', 
-              borderBottom: '1px solid var(--border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
+          <SearchBar
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
+            matches={countMatches(content, searchQuery)}
+            onClose={() => {
+              setShowSearch(false);
+              setSearchQuery('');
             }}
-          >
-            <Search size={14} color="var(--text-muted)" />
-            <input
-              type="text"
-              placeholder="Suchbegriff eingeben... (ESC zum Schließen)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ flex: 1, padding: '4px 8px' }}
-              autoFocus
-            />
-            {searchQuery && (
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                { (content.match(new RegExp(searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length } Treffer
-              </span>
-            )}
-            <button 
-              type="button" 
-              className="btn-ghost btn-sm"
-              onClick={() => { setShowSearch(false); setSearchQuery(''); }}
-            >
-              <X size={12} />
-            </button>
-          </div>
+          />
         )}
 
         {/* Modal Editor / Preview Body */}
@@ -504,22 +225,7 @@ ${renderedHtml}
           )}
         </div>
 
-        {/* Footer Stats Bar */}
-        <div className="editor-footer">
-          <div className="editor-stats-bar">
-            <span>{stats.words.toLocaleString()} Wörter</span>
-            <span>•</span>
-            <span>{stats.chars.toLocaleString()} Zeichen</span>
-            <span>•</span>
-            <span>{stats.lines} Zeilen</span>
-            <span>•</span>
-            <span>ca. {stats.readTimeMinutes} Min. Lesezeit</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: 'var(--text-muted)' }}>{`${shortcut('S')} Speichern · ${shortcut('F')} Suchen`}</span>
-          </div>
-        </div>
+        <EditorFooter stats={stats} />
       </div>
     </div>
   );

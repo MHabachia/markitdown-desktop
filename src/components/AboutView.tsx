@@ -21,6 +21,7 @@ import { UpdateState } from '../hooks/useUpdater';
 import { MARKITDOWN_URL, PROJECT_URL, openExternal } from '../utils/openExternal';
 import { FormatStrip } from './FormatStrip';
 import { Logo } from './Logo';
+import { useApp } from '../context/AppContext';
 
 interface AboutViewProps {
   diagnostics: SystemDiagnostics | null;
@@ -28,7 +29,6 @@ interface AboutViewProps {
   update: UpdateState;
   onCheckUpdate: () => void;
   onInstallUpdate: () => void;
-  onNotify: (msg: string, type?: 'success' | 'info' | 'error') => void;
 }
 
 interface StackLayer {
@@ -38,14 +38,8 @@ interface StackLayer {
   items: string[];
 }
 
-export const AboutView: React.FC<AboutViewProps> = ({
-  diagnostics,
-  capabilities,
-  update,
-  onCheckUpdate,
-  onInstallUpdate,
-  onNotify
-}) => {
+export const AboutView: React.FC<AboutViewProps> = ({ diagnostics, capabilities, update, onCheckUpdate, onInstallUpdate }) => {
+  const { notify } = useApp();
   const stack: StackLayer[] = [
     {
       icon: Monitor,
@@ -78,14 +72,14 @@ export const AboutView: React.FC<AboutViewProps> = ({
   ];
 
   const open = (url: string) =>
-    openExternal(url).catch((e) => onNotify(`Link konnte nicht geöffnet werden: ${e instanceof Error ? e.message : e}`, 'error'));
+    openExternal(url).catch((e) => notify(`Link konnte nicht geöffnet werden: ${e instanceof Error ? e.message : e}`, 'error'));
 
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(PROJECT_URL);
-      onNotify('Link kopiert', 'success');
+      notify('Link kopiert', 'success');
     } catch {
-      onNotify('Kopieren nicht möglich', 'error');
+      notify('Kopieren nicht möglich', 'error');
     }
   };
 
