@@ -6,6 +6,8 @@ from backend.tests._isolation import TEST_BASE_URL  # noqa: F401  (must come fir
 import unittest
 from fastapi.testclient import TestClient
 from backend.api import app
+from backend import storage
+from backend.models import SettingsModel
 import os
 import tempfile
 from backend.sample_generator import generate_sample_files
@@ -84,8 +86,8 @@ class TestFastAPIEndpoints(unittest.TestCase):
 
     def test_upload_copy_is_removed_after_conversion(self):
         import base64
-        from backend import api
-        before = set(os.listdir(api.UPLOAD_DIR)) if os.path.isdir(api.UPLOAD_DIR) else set()
+        from backend import config
+        before = set(os.listdir(config.UPLOAD_DIR)) if os.path.isdir(config.UPLOAD_DIR) else set()
         for save in (False, True):
             resp = self.client.post("/api/convert", json={
                 "file_base64": base64.b64encode(b"Hallo").decode(),
@@ -94,7 +96,7 @@ class TestFastAPIEndpoints(unittest.TestCase):
                 "save": save,
             })
             self.assertTrue(resp.json()["success"])
-        after = set(os.listdir(api.UPLOAD_DIR)) if os.path.isdir(api.UPLOAD_DIR) else set()
+        after = set(os.listdir(config.UPLOAD_DIR)) if os.path.isdir(config.UPLOAD_DIR) else set()
         self.assertEqual(after - before, set())
 
     def test_convert_without_target_writes_next_to_source(self):
@@ -122,8 +124,8 @@ class TestFastAPIEndpoints(unittest.TestCase):
         self.assertEqual(data["skipped"], 2)
 
     def test_settings_ignore_unknown_keys(self):
-        from backend import api as api_module
-        with open(api_module.SETTINGS_FILE, "w", encoding="utf-8") as f:
+        from backend import config
+        with open(config.SETTINGS_FILE, "w", encoding="utf-8") as f:
             f.write('{"theme": "light", "enable_plugins": true}')
         data = self.client.get("/api/settings").json()
         self.assertEqual(data["theme"], "light")
@@ -169,7 +171,7 @@ class TestApiSecurity(unittest.TestCase):
 
     def test_upload_filename_traversal_is_neutralised(self):
         import base64
-        from backend import api as api_module
+        from backend import config
         b64 = base64.b64encode(b"hello").decode()
         resp = self.client.post("/api/convert", json={
             "file_base64": b64,
@@ -179,7 +181,7 @@ class TestApiSecurity(unittest.TestCase):
         })
         self.assertEqual(resp.status_code, 200)
         src = resp.json()["source_path"]
-        self.assertTrue(os.path.realpath(src).startswith(os.path.realpath(api_module.UPLOAD_DIR)))
+        self.assertTrue(os.path.realpath(src).startswith(os.path.realpath(config.UPLOAD_DIR)))
         self.assertEqual(os.path.basename(src), "escaped.txt")
 
     def test_save_file_rejects_non_markdown(self):
@@ -285,52 +287,45 @@ class TestTightenedAccess(unittest.TestCase):
             self.assertEqual(resp.status_code, expected, name)
 
     def test_dev_origin_rejected_when_running_as_app(self):
-        import importlib
-        from unittest import mock
-        from backend import api as api_module
-        with mock.patch.dict(os.environ, {"MARKITDOWN_API_TOKEN": "t"}):
-            reloaded = importlib.reload(api_module)
-            try:
-                self.assertNotIn("http://localhost:5173", reloaded.ALLOWED_ORIGINS)
-            finally:
-                os.environ.pop("MARKITDOWN_API_TOKEN", None)
-                importlib.reload(api_module)
-        self.assertIn("http://localhost:5173", api_module.ALLOWED_ORIGINS)
+        from backend import security
+        self.assertNotIn("http://localhost:5173", security.allowed_origins("t"))
+        self.assertIn("http://localhost:5173", security.allowed_origins(""))
+        self.assertEqual(security.ALLOWED_ORIGINS, security.allowed_origins(security.API_TOKEN))
 
 
 class TestApiToken(unittest.TestCase):
     def test_token_required_when_configured(self):
-        from backend import api as api_module
-        original = api_module.API_TOKEN
-        api_module.API_TOKEN = "secret-token"
+        from backend import security
+        original = security.API_TOKEN
+        security.API_TOKEN = "secret-token"
         try:
             client = TestClient(app, base_url=TEST_BASE_URL)
             self.assertEqual(client.get("/api/history").status_code, 401)
             self.assertEqual(client.get("/api/history", headers={"X-API-Token": "wrong"}).status_code, 401)
             self.assertEqual(client.get("/api/history", headers={"X-API-Token": "secret-token"}).status_code, 200)
         finally:
-            api_module.API_TOKEN = original
+            security.API_TOKEN = original
 
 class TestStoreFailures(unittest.TestCase):
     """History and settings must not lose data silently or report a save that did not happen."""
 
     def setUp(self):
-        from backend import api as api_module
-        self.api = api_module
+        from backend import config
+        self.config = config
         self.client = TestClient(app, base_url=TEST_BASE_URL)
         self.tmp = tempfile.mkdtemp()
-        self.saved_paths = (api_module.HISTORY_FILE, api_module.SETTINGS_FILE)
+        self.saved_paths = (config.HISTORY_FILE, config.SETTINGS_FILE)
 
     def tearDown(self):
-        self.api.HISTORY_FILE, self.api.SETTINGS_FILE = self.saved_paths
+        self.config.HISTORY_FILE, self.config.SETTINGS_FILE = self.saved_paths
 
     def test_unreadable_history_is_moved_aside_not_overwritten(self):
         path = os.path.join(self.tmp, "history.json")
         with open(path, "w", encoding="utf-8") as f:
             f.write('[{"id": "hist_1", ')  # cut off, e.g. by a crash
-        self.api.HISTORY_FILE = path
+        self.config.HISTORY_FILE = path
         self.assertEqual(self.client.get("/api/history").json(), [])
-        self.api.append_history({"id": "hist_2"})
+        storage.append_history({"id": "hist_2"})
         self.assertTrue(os.path.exists(path + ".corrupt"))
         with open(path + ".corrupt", encoding="utf-8") as f:
             self.assertIn("hist_1", f.read())
@@ -340,18 +335,18 @@ class TestStoreFailures(unittest.TestCase):
         path = os.path.join(self.tmp, "history.json")
         with open(path, "w", encoding="utf-8") as f:
             f.write('{"not": "a list"}')
-        self.api.HISTORY_FILE = path
+        self.config.HISTORY_FILE = path
         self.assertEqual(self.client.get("/api/history").json(), [])
         self.assertTrue(os.path.exists(path + ".corrupt"))
 
     def test_settings_save_failure_is_reported(self):
-        self.api.SETTINGS_FILE = os.path.join(self.tmp, "missing-folder", "settings.json")
-        res = self.client.post("/api/settings", json=self.api.SettingsModel().model_dump())
+        self.config.SETTINGS_FILE = os.path.join(self.tmp, "missing-folder", "settings.json")
+        res = self.client.post("/api/settings", json=SettingsModel().model_dump())
         self.assertEqual(res.status_code, 500)
         self.assertIn("Einstellungen", res.json()["detail"])
 
     def test_history_write_failure_does_not_break_a_conversion(self):
-        self.api.HISTORY_FILE = os.path.join(self.tmp, "missing-folder", "history.json")
+        self.config.HISTORY_FILE = os.path.join(self.tmp, "missing-folder", "history.json")
         src = os.path.join(self.tmp, "note.txt")
         with open(src, "w", encoding="utf-8") as f:
             f.write("Hallo")

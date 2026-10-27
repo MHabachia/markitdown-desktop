@@ -17,7 +17,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 from backend.tests._isolation import TEST_BASE_URL  # noqa: E402  (must come before backend imports)
 
 from fastapi.testclient import TestClient
-from backend.api import app, engine
+from backend.api import app
+from backend.services import engine
 from backend.linter import clean_blank_lines, format_markdown_tables, generate_toc
 from backend.watcher import FolderWatcher
 
@@ -141,10 +142,10 @@ if __name__ == "__main__":
 class TestDataMigration(unittest.TestCase):
     def test_legacy_history_is_copied_once(self):
         from unittest import mock
-        from backend import api as api_module
+        from backend import config, storage
         with tempfile.TemporaryDirectory() as legacy, tempfile.TemporaryDirectory() as new:
             with open(os.path.join(legacy, "history.json"), "w") as fh:
                 fh.write("[]")
-            with mock.patch.object(api_module, "LEGACY_DATA_DIR", legacy), mock.patch.object(api_module, "DATA_DIR", new):
-                api_module.migrate_legacy_data()
+            with mock.patch.object(config, "LEGACY_DATA_DIR", legacy), mock.patch.object(config, "DATA_DIR", new):
+                storage.migrate_legacy_data()
             self.assertTrue(os.path.isfile(os.path.join(new, "history.json")))
