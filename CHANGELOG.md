@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.3
+
+- Editor: „Tabellen“, „Bereinigen“ und „+TOC“ melden jetzt einen Fehler, wenn das Backend die Anfrage ablehnt, statt Erfolg zu melden. Beim Speichern aus dem Editor erscheint der echte Grund (zum Beispiel „Der Zielordner existiert nicht“).
+- Intern aufgeräumt, ohne Änderung am Verhalten: Das Backend (`api.py`) und die Oberfläche (`App.tsx`, Editor, Stylesheet) sind in kleinere Module zerlegt, und es gibt Tests für die Warteschlange, die Einstellungen und den API-Client.
 ## 1.1.2
 
 - Weniger Speicherverbrauch nach großen Stapeln: Die Umwandlungsprozesse mit den geladenen Erkennungsmodellen werden nach fünf Minuten Leerlauf beendet und nach 50 Dateien durch frische ersetzt.
