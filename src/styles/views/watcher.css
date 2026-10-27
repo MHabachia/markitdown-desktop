@@ -1,0 +1,32 @@
+/* Folder watcher page */
+.watcher-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.watcher-hero.running {
+  border-color: var(--color-success-border);
+  background-color: var(--color-success-bg);
+}
+
+.watcher-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 480px;
+}
+
+.watcher-hero h2 { font-size: 18px; font-weight: 600; }
+.watcher-hero p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.watcher-hero .error { color: var(--color-error); }
+.watcher-stats { font-weight: 500; color: var(--text-primary) !important; }
+
+.setting-title svg { vertical-align: -2px; margin-right: 4px; color: var(--text-muted); }
+

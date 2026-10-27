@@ -1,0 +1,132 @@
+/* =========================================================
+   Settings building blocks
+========================================================= */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.settings-section-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.setting-control {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.setting-input { width: 280px; }
+.setting-input-narrow { width: 96px; }
+
+.field-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.chip-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-sidebar);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.chip:hover { color: var(--text-primary); border-color: var(--border-default); }
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.engine-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 18px;
+}
+
+.diag-value.ok { color: var(--color-success); }
+.diag-value.warn { color: var(--color-warning); }
+
+.about-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.about-title { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+.about-meta { font-size: 12px; user-select: text; }
+
+.kbd-button kbd {
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.icon-button:hover:not(:disabled) {
+  background-color: var(--bg-surface-active);
+  color: var(--text-primary);
+}
+
+.icon-slot {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.icon-button.active {
+  color: var(--accent-primary);
+}
+
+.icon-button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.danger-text { color: var(--color-error); }
+

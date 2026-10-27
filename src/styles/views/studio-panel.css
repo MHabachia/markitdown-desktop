@@ -1,0 +1,141 @@
+/* =========================================================
+   Studio side panel (preview / options)
+========================================================= */
+.studio-panel {
+  position: relative;
+  width: 400px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border-subtle);
+  background-color: var(--bg-sidebar);
+  height: 100%;
+  min-height: 0;
+}
+
+.studio-panel-header {
+  height: 52px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.studio-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.panel-hint {
+  padding: 24px 20px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.panel-message {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.panel-message h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.panel-message .error { color: var(--color-error); }
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.preview-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-sidebar);
+  z-index: 1;
+}
+
+.preview-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.preview-content.rendered-markdown {
+  padding: 16px 18px;
+  font-size: 13px;
+  flex: 1;
+}
+
+.preview-footer {
+  padding: 8px 16px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.panel-options {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px;
+}
+
+.panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.panel-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.panel-hint-inline {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.panel-input {
+  width: 100%;
+}
+
+.chip-row.left { justify-content: flex-start; }
+
+.watcher-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+

@@ -1,0 +1,15 @@
+/* The views, one file per area. Order matters: later rules override earlier ones. */
+@import './dropzone.css';
+@import './editor.css';
+@import './settings.css';
+@import './overlays.css';
+@import './print.css';
+@import './details.css';
+@import './lists.css';
+@import './settings-blocks.css';
+@import './studio-panel.css';
+@import './studio.css';
+@import './watcher.css';
+@import './about.css';
+@import './updates.css';
+@import './resize-handle.css';

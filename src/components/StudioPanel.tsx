@@ -7,6 +7,7 @@ import { FILE_MANAGER } from '../utils/platform';
 import { usePanelWidth } from '../hooks/usePanelWidth';
 import { IS_DESKTOP } from '../utils/desktop';
 import { ResizeHandle } from './ResizeHandle';
+import { useApp } from '../context/AppContext';
 
 export type PanelTab = 'preview' | 'options';
 
@@ -15,13 +16,9 @@ interface StudioPanelProps {
   onTabChange: (tab: PanelTab) => void;
   onClose: () => void;
   file: FileItem | null;
-  settings: AppSettings;
-  onUpdateSettings: (s: Partial<AppSettings>) => void;
   onOpenEditor: (file: FileItem) => void;
   onSave: (file: FileItem, saveAs: boolean) => void;
-  onOpenFolder: (path: string) => void;
   onShowErrorDetails: (file: FileItem) => void;
-  onNotify: (msg: string, type?: 'success' | 'info' | 'error') => void;
 }
 
 /** Right-hand panel of the studio: live preview of the selected file, or the quick options. */
@@ -50,12 +47,13 @@ export const StudioPanel: React.FC<StudioPanelProps> = (props) => {
           <X size={15} />
         </button>
       </div>
-      <div className="studio-panel-body">{tab === 'preview' ? <PreviewTab {...props} /> : <OptionsTab {...props} />}</div>
+      <div className="studio-panel-body">{tab === 'preview' ? <PreviewTab {...props} /> : <OptionsTab />}</div>
     </aside>
   );
 };
 
-const PreviewTab: React.FC<StudioPanelProps> = ({ file, onOpenEditor, onOpenFolder, onShowErrorDetails, onNotify, onSave }) => {
+const PreviewTab: React.FC<StudioPanelProps> = ({ file, onOpenEditor, onShowErrorDetails, onSave }) => {
+  const { notify, openFolder } = useApp();
   const markdown = file?.markdownContent;
   const html = useMemo(() => (markdown ? renderMarkdown(markdown) : ''), [markdown]);
 
@@ -86,9 +84,9 @@ const PreviewTab: React.FC<StudioPanelProps> = ({ file, onOpenEditor, onOpenFold
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(file.markdownContent ?? '');
-      onNotify('Markdown kopiert', 'success');
+      notify('Markdown kopiert', 'success');
     } catch {
-      onNotify('Kopieren nicht möglich', 'error');
+      notify('Kopieren nicht möglich', 'error');
     }
   };
 
@@ -121,7 +119,7 @@ const PreviewTab: React.FC<StudioPanelProps> = ({ file, onOpenEditor, onOpenFold
             Kopieren
           </button>
           {file.saved && file.targetPath && (
-            <button type="button" className="btn-ghost btn-sm" onClick={() => onOpenFolder(file.targetPath!)}>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => openFolder(file.targetPath!)}>
               <FolderOpen size={13} aria-hidden="true" />
               Im {FILE_MANAGER}
             </button>
@@ -138,7 +136,8 @@ const PreviewTab: React.FC<StudioPanelProps> = ({ file, onOpenEditor, onOpenFold
   );
 };
 
-const OptionsTab: React.FC<StudioPanelProps> = ({ settings, onUpdateSettings }) => {
+const OptionsTab: React.FC = () => {
+  const { settings, updateSettings } = useApp();
   return (
     <div className="panel-options">
       <PanelField label="Zielordner" hint="Leer: neben der Originaldatei">
@@ -146,7 +145,7 @@ const OptionsTab: React.FC<StudioPanelProps> = ({ settings, onUpdateSettings }) 
           className="panel-input"
           value={settings.default_output_dir}
           placeholder="Neben dem Original"
-          onCommit={(v) => onUpdateSettings({ default_output_dir: v })}
+          onCommit={(v) => updateSettings({ default_output_dir: v })}
         />
       </PanelField>
 
@@ -154,11 +153,11 @@ const OptionsTab: React.FC<StudioPanelProps> = ({ settings, onUpdateSettings }) 
         <TextField
           className="panel-input"
           value={settings.filename_template || '{name}.md'}
-          onCommit={(v) => onUpdateSettings({ filename_template: v || '{name}.md' })}
+          onCommit={(v) => updateSettings({ filename_template: v || '{name}.md' })}
         />
         <div className="chip-row left">
           {TEMPLATE_PRESETS.map((tpl) => (
-            <button key={tpl} type="button" className="chip" onClick={() => onUpdateSettings({ filename_template: tpl })}>
+            <button key={tpl} type="button" className="chip" onClick={() => updateSettings({ filename_template: tpl })}>
               {tpl}
             </button>
           ))}
@@ -169,7 +168,7 @@ const OptionsTab: React.FC<StudioPanelProps> = ({ settings, onUpdateSettings }) 
         <select
           className="panel-input"
           value={settings.collision_strategy}
-          onChange={(e) => onUpdateSettings({ collision_strategy: e.target.value as AppSettings['collision_strategy'] })}
+          onChange={(e) => updateSettings({ collision_strategy: e.target.value as AppSettings['collision_strategy'] })}
         >
           <option value="rename">Nummerieren (datei (1).md)</option>
           <option value="overwrite">Überschreiben</option>
@@ -182,17 +181,17 @@ const OptionsTab: React.FC<StudioPanelProps> = ({ settings, onUpdateSettings }) 
         <Checkbox
           checked={settings.open_preview_after_convert}
           label="Ergebnis in der Vorschau zeigen"
-          onChange={(v) => onUpdateSettings({ open_preview_after_convert: v })}
+          onChange={(v) => updateSettings({ open_preview_after_convert: v })}
         />
         <Checkbox
           checked={settings.auto_save_after_convert}
           label="Automatisch speichern (ohne Prüfen)"
-          onChange={(v) => onUpdateSettings({ auto_save_after_convert: v })}
+          onChange={(v) => updateSettings({ auto_save_after_convert: v })}
         />
         <Checkbox
           checked={settings.open_output_after_convert}
           label="Zielordner nach dem Speichern öffnen"
-          onChange={(v) => onUpdateSettings({ open_output_after_convert: v })}
+          onChange={(v) => updateSettings({ open_output_after_convert: v })}
         />
       </PanelField>
 

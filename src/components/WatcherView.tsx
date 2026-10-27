@@ -1,19 +1,14 @@
 import React from 'react';
 import { FolderInput, FolderOutput, Play, Square } from 'lucide-react';
-import { AppSettings } from '../types';
 import { DEFAULT_INBOX, useWatcher } from '../hooks/useWatcher';
 import { formatDateTime } from '../utils/format';
 import { TextField } from './fields';
-
-interface WatcherViewProps {
-  settings: AppSettings;
-  onUpdateSettings: (s: Partial<AppSettings>) => void;
-  onNotify: (msg: string, type?: 'success' | 'info' | 'error') => void;
-}
+import { useApp } from '../context/AppContext';
 
 /** Folder watcher: documents dropped into the inbox are converted automatically. */
-export const WatcherView: React.FC<WatcherViewProps> = ({ settings, onUpdateSettings, onNotify }) => {
-  const watcher = useWatcher(settings, (msg) => onNotify(msg, 'error'));
+export const WatcherView: React.FC = () => {
+  const { settings, updateSettings, notify } = useApp();
+  const watcher = useWatcher(settings, (msg) => notify(msg, 'error'));
   const running = watcher.status?.is_running ?? false;
   const lastEvent = watcher.status?.last_event_time
     ? formatDateTime(new Date(watcher.status.last_event_time * 1000).toISOString())
@@ -59,7 +54,7 @@ export const WatcherView: React.FC<WatcherViewProps> = ({ settings, onUpdateSett
               <TextField
                 value={settings.watcher_inbox_dir || ''}
                 placeholder={DEFAULT_INBOX}
-                onCommit={(v) => onUpdateSettings({ watcher_inbox_dir: v })}
+                onCommit={(v) => updateSettings({ watcher_inbox_dir: v })}
               />
             </div>
           </div>
@@ -72,7 +67,7 @@ export const WatcherView: React.FC<WatcherViewProps> = ({ settings, onUpdateSett
               <TextField
                 value={settings.watcher_output_dir || ''}
                 placeholder="Wie Eingangsordner"
-                onCommit={(v) => onUpdateSettings({ watcher_output_dir: v })}
+                onCommit={(v) => updateSettings({ watcher_output_dir: v })}
               />
             </div>
           </div>

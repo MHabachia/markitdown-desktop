@@ -1,0 +1,66 @@
+/* Collapsible technical details (settings & about) */
+.details-toggle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.details-toggle > summary {
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+}
+
+.details-toggle > summary:hover {
+  color: var(--text-primary);
+}
+
+.details-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.path-box {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background-color: var(--bg-code);
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.pkg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 6px;
+}
+
+.pkg-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 11px;
+  background-color: var(--bg-sidebar);
+}
+
+.pkg-item span:last-child {
+  color: var(--text-muted);
+}
+
+.pkg-item.missing span:last-child {
+  color: var(--color-warning);
+}
+
+.settings-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+

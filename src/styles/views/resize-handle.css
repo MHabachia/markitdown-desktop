@@ -1,0 +1,37 @@
+/* Drag handle on the left edge of the studio panel */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 5;
+  touch-action: none;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background-color: transparent;
+  transition: background-color var(--transition-fast);
+}
+
+.resize-handle:hover::after,
+.resize-handle:focus-visible::after,
+body.is-resizing .resize-handle::after {
+  background-color: var(--accent-primary);
+}
+
+.resize-handle:focus-visible { outline: none; }
+
+/* While dragging: no text selection, resize cursor everywhere */
+body.is-resizing,
+body.is-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
