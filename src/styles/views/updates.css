@@ -1,0 +1,23 @@
+/* Update notice (sidebar) and update status (about page) */
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-primary-glow);
+  background-color: var(--accent-soft);
+  color: var(--accent-primary);
+  text-align: left;
+}
+
+.update-banner span { display: flex; flex-direction: column; gap: 1px; }
+.update-banner strong { font-size: 12px; color: var(--text-primary); }
+.update-banner small { font-size: 11px; color: var(--text-secondary); font-weight: 400; }
+
+.update-note { font-size: 12px; }
+.update-note.ok { color: var(--color-success); }
+.update-note.error { color: var(--color-error); }
+

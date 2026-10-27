@@ -1,0 +1,41 @@
+/* =========================================================
+   Print Styles for Clean PDF Export
+========================================================= */
+@media print {
+  body, html {
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+  .sidebar, .editor-header, .editor-footer, .toast-container, .titlebar, .view-mode-tabs {
+    display: none !important;
+  }
+  .markdown-modal-backdrop {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  .markdown-modal {
+    width: 100% !important;
+    height: auto !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .markdown-editor-pane {
+    display: none !important;
+  }
+  .rendered-markdown {
+    padding: 0 !important;
+    color: #111111 !important;
+    max-width: 100% !important;
+  }
+  .rendered-markdown table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  .rendered-markdown th, .rendered-markdown td {
+    border: 1px solid #cccccc;
+    padding: 8px;
+    color: #111111;
+  }
+}
+

@@ -1,0 +1,199 @@
+/* =========================================================
+   Markdown Viewer & Editor Modal
+========================================================= */
+.markdown-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.markdown-modal {
+  width: 100%;
+  max-width: 1200px;
+  height: 90vh;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.editor-header {
+  height: 52px;
+  padding: 0 16px;
+  background-color: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.editor-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.editor-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.unsaved-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-warning);
+}
+
+.editor-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-mode-tabs {
+  display: flex;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.view-mode-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+.view-mode-btn.active {
+  background-color: var(--bg-surface-active);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.editor-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.editor-pane {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.editor-pane.raw-source {
+  background-color: var(--bg-code);
+  padding: 0;
+}
+
+.code-textarea {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 16px 20px;
+  border: none;
+  resize: none;
+  outline: none;
+}
+
+.editor-pane.rendered {
+  background-color: var(--bg-surface);
+}
+
+/* Rendered Markdown Typography */
+.rendered-markdown {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+.rendered-markdown h1, .rendered-markdown h2, .rendered-markdown h3 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.rendered-markdown h1 { font-size: 24px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px; }
+.rendered-markdown h2 { font-size: 18px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px; }
+.rendered-markdown h3 { font-size: 15px; }
+.rendered-markdown p { margin-bottom: 14px; }
+.rendered-markdown ul, .rendered-markdown ol { margin-left: 24px; margin-bottom: 14px; }
+.rendered-markdown li { margin-bottom: 4px; }
+.rendered-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+.rendered-markdown th, .rendered-markdown td {
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+}
+.rendered-markdown th { background-color: var(--bg-sidebar); font-weight: 600; }
+.rendered-markdown blockquote {
+  border-left: 3px solid var(--accent-primary);
+  padding-left: 14px;
+  color: var(--text-secondary);
+  margin: 14px 0;
+  font-style: italic;
+}
+.rendered-markdown code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background-color: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+}
+.rendered-markdown pre {
+  background-color: var(--bg-code);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  padding: 14px;
+  overflow-x: auto;
+  margin: 16px 0;
+}
+.rendered-markdown pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.editor-footer {
+  height: 38px;
+  padding: 0 16px;
+  background-color: var(--bg-sidebar);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.editor-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+

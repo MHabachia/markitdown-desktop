@@ -1,0 +1,241 @@
+/* =========================================================
+   Lists (queue and history share one row layout)
+========================================================= */
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.queue-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.queue-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-right: auto;
+}
+
+.queue-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.queue-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.queue-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.queue-progress {
+  height: 2px;
+  background-color: var(--border-subtle);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.queue-progress-bar {
+  height: 100%;
+  background-color: var(--accent-primary);
+  transition: width var(--transition-normal);
+}
+
+.queue-empty {
+  text-align: center;
+  padding: 32px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background-color: var(--bg-surface);
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  min-height: 58px;
+}
+
+.list-row.selectable {
+  cursor: pointer;
+}
+
+.list-row.selectable:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+
+.list-row.selected,
+.list-row.selected:hover {
+  background-color: var(--accent-primary-glow);
+  box-shadow: inset 3px 0 0 var(--accent-primary);
+}
+
+.list-row:last-child {
+  border-bottom: none;
+}
+
+.list-row:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.list-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.list-row-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-row-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-row-meta.error {
+  color: var(--color-error);
+}
+
+.list-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: flex-end;
+}
+
+.list-row-actions .btn-sm {
+  margin-right: 6px;
+  min-width: 104px;
+  justify-content: center;
+}
+
+/* Status: a dot plus a word, no boxed badge */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 72px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.status-success .status-dot, .status-dot.ok { background-color: var(--color-success); }
+.status-failed .status-dot { background-color: var(--color-error); }
+.status-converting .status-dot { background-color: var(--accent-primary); animation: pulse 1.2s ease-in-out infinite; }
+.status-dot.warn { background-color: var(--color-warning); }
+.status-dot.error { background-color: var(--color-error); }
+.status-unsaved .status-dot { background-color: var(--color-warning); }
+.status-unsaved { color: var(--color-warning); }
+
+@keyframes pulse {
+  50% { opacity: 0.35; }
+}
+
+/* Segmented filter */
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background-color: var(--bg-sidebar);
+  border: 1px solid var(--border-subtle);
+}
+
+.segmented-item {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.segmented-item.active {
+  background-color: var(--bg-surface-active);
+  color: var(--text-primary);
+}
+
+.segmented-count {
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  background-color: var(--bg-input);
+  color: var(--text-muted);
+  width: 300px;
+}
+
+.search-field input {
+  border: none;
+  background: none;
+  box-shadow: none;
+  padding: 7px 0;
+  flex: 1;
+}
+
+.empty-state {
+  max-width: 420px;
+  margin: 12vh auto 0;
+  text-align: center;
+}
+
+.empty-state h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.empty-state p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+

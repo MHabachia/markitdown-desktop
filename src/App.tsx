@@ -36,7 +36,7 @@ import { CommandPalette } from './components/CommandPalette';
 
 import './styles/global.css';
 import './styles/layout.css';
-import './styles/views.css';
+import './styles/views/index.css';
 
 const PAGE_TITLES: Record<ActiveTab, string> = {
   studio: 'Umwandeln',
