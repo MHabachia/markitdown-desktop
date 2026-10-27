@@ -6,13 +6,7 @@ and batch queue execution.
 """
 
 import os
-import sys
-
-# Ensure repository root is in sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 import re
-import uuid
 import time
 import threading
 import datetime
@@ -25,6 +19,7 @@ try:
 except ImportError:
     MarkItDown = None
 
+from backend.fsutil import write_atomic
 from backend.isolation import ConversionPool, ConversionTimeout, RemoteError
 from backend.ocr_service import IMAGE_EXTENSIONS, extract_image_visual_markdown
 
@@ -256,18 +251,6 @@ class ConversionEngine:
                 "timestamp": datetime.datetime.now().isoformat()
             }
 
-    @staticmethod
-    def write_atomic(path: str, content: str) -> None:
-        """Writes via a temporary file in the same folder so a crash never leaves half a file."""
-        target = pathlib.Path(path)
-        tmp = target.with_name(f".{target.name}.{uuid.uuid4().hex}.tmp")
-        try:
-            tmp.write_text(content, encoding="utf-8")
-            os.replace(tmp, target)
-        finally:
-            if tmp.exists():
-                tmp.unlink()
-
     def save_markdown(
         self,
         source_path: str,
@@ -291,7 +274,7 @@ class ConversionEngine:
             )
             if collision_strategy == "skip" and os.path.exists(target_path):
                 return {"target_path": target_path, "saved": False, "skipped": True}
-            self.write_atomic(target_path, content)
+            write_atomic(target_path, content)
         return {
             "target_path": target_path,
             "saved": True,
