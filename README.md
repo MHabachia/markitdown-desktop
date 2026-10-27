@@ -1,5 +1,10 @@
 # MarkItDown Desktop
 
+[![Tests](https://github.com/MHabachia/markitdown-desktop/actions/workflows/tests.yml/badge.svg)](https://github.com/MHabachia/markitdown-desktop/actions/workflows/tests.yml)
+[![Release](https://img.shields.io/github/v/release/MHabachia/markitdown-desktop)](https://github.com/MHabachia/markitdown-desktop/releases/latest)
+[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-blue)](LICENSE)
+![Plattformen](https://img.shields.io/badge/Plattformen-macOS%20%7C%20Windows-lightgrey)
+
 Eine kleine Desktop-App für macOS (Apple-Chip) und Windows, mit der man PDFs, Office-Dateien, Webseiten und Tabellen in Markdown umwandelt. Unter der Haube arbeitet [MarkItDown](https://github.com/microsoft/markitdown) von Microsoft, die App drumherum macht es bequem: Dateien reinziehen, Ergebnis ansehen, speichern. Alles passiert auf dem eigenen Rechner, es wird nichts hochgeladen und nichts mitgeschnitten.
 
 Gedacht ist sie für alle, die Unterlagen mit KI-Tools wie ChatGPT bearbeiten: Markdown ist für diese Tools deutlich kompakter als PDF oder Word, man spart also Tokens und bekommt bessere Antworten.
