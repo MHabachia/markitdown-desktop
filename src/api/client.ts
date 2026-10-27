@@ -218,7 +218,6 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ file_path, content })
     });
-    if (!res.ok) throw new Error('Datei konnte nicht gespeichert werden');
     return parseJson(res);
   },
 
@@ -342,8 +341,8 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content })
     });
-    const data = await res.json();
-    return data.formatted || content;
+    const data = await parseJson<{ formatted?: string }>(res);
+    return data.formatted ?? content;
   },
 
   async cleanWhitespace(content: string): Promise<string> {
@@ -352,8 +351,8 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content })
     });
-    const data = await res.json();
-    return data.formatted || content;
+    const data = await parseJson<{ formatted?: string }>(res);
+    return data.formatted ?? content;
   },
 
   async generateToc(content: string): Promise<string> {
@@ -362,7 +361,7 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content })
     });
-    const data = await res.json();
-    return data.formatted || content;
+    const data = await parseJson<{ formatted?: string }>(res);
+    return data.formatted ?? content;
   }
 };
