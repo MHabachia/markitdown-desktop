@@ -68,11 +68,13 @@ class TestWorkerLifetime(unittest.TestCase):
         try:
             pool.convert("x", False, timeout=30)
             worker = pool._idle[0]
+            # kill() closes the connection last, so a closed connection means the process is gone;
+            # asking the process itself meanwhile would race with kill() waiting on it.
             deadline = time.monotonic() + 10
-            while pool._idle and time.monotonic() < deadline:
+            while not worker.conn.closed and time.monotonic() < deadline:
                 time.sleep(0.1)
             self.assertEqual(pool._idle, [])
-            worker.process.join(5)
+            self.assertTrue(worker.conn.closed)
             self.assertFalse(worker.process.is_alive())
             # the pool still works afterwards
             self.assertEqual(pool.convert("x", False, timeout=30)[0], "ok")
