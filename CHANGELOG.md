@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2
+
+- Weniger Speicherverbrauch nach großen Stapeln: Die Umwandlungsprozesse mit den geladenen Erkennungsmodellen werden nach fünf Minuten Leerlauf beendet und nach 50 Dateien durch frische ersetzt.
+- Kleine Updates der Oberfläche (Tauri-Bibliotheken, marked, vite, lucide-react, oxlint). `THIRD_PARTY_NOTICES.md` ist auf dem aktuellen Stand.
+- Im Repository: `CONTRIBUTING.md`, Vorlage für Pull Requests, `.editorconfig`, und die Pakete nur für Tests stehen getrennt in `requirements-dev.in`.
 ## 1.1.1
 
 - Die Markdown-Helfer im Editor lassen Code-Blöcke jetzt unverändert: „Tabellen ausrichten“ und „Leerzeilen aufräumen“ greifen nicht mehr in Code ein, und das Inhaltsverzeichnis übernimmt keine `#`-Zeilen aus Code. Tabellenzellen mit maskiertem Strich (`\|`) bleiben heil, und doppelte Überschriften bekommen wie auf GitHub nummerierte Anker.
