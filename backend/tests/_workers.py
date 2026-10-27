@@ -13,3 +13,16 @@ def crashing_worker(conn):
     conn.recv()
     import os
     os._exit(3)
+
+
+def echo_worker(conn):
+    """Answers every job with a fixed result, like a converter that always succeeds."""
+    conn.send(("ready",))
+    while True:
+        try:
+            job = conn.recv()
+        except (EOFError, OSError):
+            return
+        if job is None:
+            return
+        conn.send(("ok", "ok", None, None))

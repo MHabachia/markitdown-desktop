@@ -53,8 +53,6 @@ dort ein Issue öffnen.
 | fastapi | 0.142.2 | MIT |
 | flatbuffers | 25.12.19 | Apache 2.0 |
 | h11 | 0.16.0 | MIT |
-| httpcore | 1.0.9 | BSD-3-Clause |
-| httpx | 0.28.1 | BSD-3-Clause |
 | idna | 3.20 | BSD-3-Clause |
 | lxml | 6.1.3 | BSD-3-Clause |
 | magika | 0.6.3 | Apache-2.0 |
@@ -102,19 +100,19 @@ dort ein Issue öffnen.
 
 | Paket | Version | Lizenz |
 | --- | --- | --- |
-| @tauri-apps/api | 2.12.2 | Apache-2.0 OR MIT |
-| @tauri-apps/plugin-dialog | 2.8.1 | MIT OR Apache-2.0 |
-| @tauri-apps/plugin-opener | 2.7.0 | MIT OR Apache-2.0 |
+| @tauri-apps/api | 2.12.4 | Apache-2.0 OR MIT |
+| @tauri-apps/plugin-dialog | 2.8.3 | MIT OR Apache-2.0 |
+| @tauri-apps/plugin-opener | 2.7.2 | MIT OR Apache-2.0 |
 | @tauri-apps/plugin-process | 2.4.0 | MIT OR Apache-2.0 |
-| @tauri-apps/plugin-updater | 2.13.1 | MIT OR Apache-2.0 |
+| @tauri-apps/plugin-updater | 2.14.0 | MIT OR Apache-2.0 |
 | @types/react | 19.3.0 | MIT |
 | @types/trusted-types | 2.0.7 | MIT |
 | csstype | 3.2.3 | MIT |
-| dompurify | 3.4.16 | (MPL-2.0 OR Apache-2.0) |
-| lucide-react | 1.54.0 | ISC |
-| marked | 18.1.0 | MIT |
-| react | 19.3.0 | MIT |
-| react-dom | 19.3.0 | MIT |
+| dompurify | 3.4.17 | (MPL-2.0 OR Apache-2.0) |
+| lucide-react | 1.62.0 | ISC |
+| marked | 18.1.2 | MIT |
+| react | 19.3.1 | MIT |
+| react-dom | 19.3.1 | MIT |
 | scheduler | 0.28.0 | MIT |
 
 ## Rust-Pakete (Tauri und App-Hülle)
@@ -444,7 +442,7 @@ Gleiche Texte stehen nur einmal da. Darunter steht, für welche Pakete sie gelte
 
 ---
 
-**Gilt für:** atomic-waker 1.1.2, base64 0.21.7, base64 0.22.1, base64 0.23.1, bit-set 0.8.0, bit-vec 0.8.0, bitflags 1.3.2, bitflags 2.13.2, block-buffer 0.10.4, bs58 0.5.1, camino 1.2.6, cfg-if 1.0.5, core-foundation 0.10.1, core-foundation 0.9.4, core-foundation-sys 0.8.7, core-graphics 0.25.0, core-graphics-types 0.2.0, cpufeatures 0.2.17, crossbeam-channel 0.5.17, crossbeam-utils 0.8.23, crypto-common 0.1.7, defmt 1.1.1, defmt-macros 1.1.1, digest 0.10.7, displaydoc 0.2.7, dompurify 3.4.16, embed_plist 1.2.2, equivalent 1.0.2, errno 0.3.14, fastrand 2.5.0, filetime 0.2.29, flatbuffers 25.12.19, flate2 1.1.10, fnv 1.0.7, form_urlencoded 1.2.2, glob 0.3.4, hashbrown 0.12.3, hashbrown 0.17.1, heck 0.5.0, html5ever 0.39.0, httparse 1.10.1, hyper-rustls 0.27.10, idna 1.1.0, idna_adapter 1.2.2, indexmap 1.9.3, indexmap 2.14.2, keyboard-types 0.8.3, lock_api 0.4.14, log 0.4.34, magika 0.6.3, markup5ever 0.39.0, mime 0.3.17, muda 0.20.0, num-traits 0.2.19, once_cell 1.21.4, opentelemetry-api 1.45.1, parking_lot 0.12.5, parking_lot_core 0.9.12, percent-encoding 2.3.2, png 0.17.16, png 0.18.1, pypdfium2 5.13.0, regex 1.13.1, regex-automata 0.4.18, regex-syntax 0.8.11, rustix 1.1.5, rustls 0.23.46, rustls-platform-verifier 0.7.1, scopeguard 1.2.0, security-framework 3.7.0, security-framework-sys 2.17.0, serde_with 3.24.0, serde_with_macros 3.24.0, serialize-to-javascript 0.1.2, serialize-to-javascript-impl 0.1.2, servo_arc 0.4.3, sha2 0.10.9, siphasher 1.0.4, smallvec 1.16.2, socket2 0.6.5, stable_deref_trait 1.2.1, string_cache 0.9.0, system-configuration 0.7.0, system-configuration-sys 0.6.0, tar 0.4.46, tempfile 3.27.0, tendril 0.5.1, tinyvec 1.13.3, tray-icon 0.25.1, tzdata 2026.5, unicode-segmentation 1.13.3, url 2.5.8, utf8_iter 1.0.4, uuid 1.27.0, web_atoms 0.2.6, window-vibrancy 0.8.1, wry 0.57.0, xattr 1.6.1, zeroize 1.9.1
+**Gilt für:** atomic-waker 1.1.2, base64 0.21.7, base64 0.22.1, base64 0.23.1, bit-set 0.8.0, bit-vec 0.8.0, bitflags 1.3.2, bitflags 2.13.2, block-buffer 0.10.4, bs58 0.5.1, camino 1.2.6, cfg-if 1.0.5, core-foundation 0.10.1, core-foundation 0.9.4, core-foundation-sys 0.8.7, core-graphics 0.25.0, core-graphics-types 0.2.0, cpufeatures 0.2.17, crossbeam-channel 0.5.17, crossbeam-utils 0.8.23, crypto-common 0.1.7, defmt 1.1.1, defmt-macros 1.1.1, digest 0.10.7, displaydoc 0.2.7, dompurify 3.4.17, embed_plist 1.2.2, equivalent 1.0.2, errno 0.3.14, fastrand 2.5.0, filetime 0.2.29, flatbuffers 25.12.19, flate2 1.1.10, fnv 1.0.7, form_urlencoded 1.2.2, glob 0.3.4, hashbrown 0.12.3, hashbrown 0.17.1, heck 0.5.0, html5ever 0.39.0, httparse 1.10.1, hyper-rustls 0.27.10, idna 1.1.0, idna_adapter 1.2.2, indexmap 1.9.3, indexmap 2.14.2, keyboard-types 0.8.3, lock_api 0.4.14, log 0.4.34, magika 0.6.3, markup5ever 0.39.0, mime 0.3.17, muda 0.20.0, num-traits 0.2.19, once_cell 1.21.4, opentelemetry-api 1.45.1, parking_lot 0.12.5, parking_lot_core 0.9.12, percent-encoding 2.3.2, png 0.17.16, png 0.18.1, pypdfium2 5.13.0, regex 1.13.1, regex-automata 0.4.18, regex-syntax 0.8.11, rustix 1.1.5, rustls 0.23.46, rustls-platform-verifier 0.7.1, scopeguard 1.2.0, security-framework 3.7.0, security-framework-sys 2.17.0, serde_with 3.24.0, serde_with_macros 3.24.0, serialize-to-javascript 0.1.2, serialize-to-javascript-impl 0.1.2, servo_arc 0.4.3, sha2 0.10.9, siphasher 1.0.4, smallvec 1.16.2, socket2 0.6.5, stable_deref_trait 1.2.1, string_cache 0.9.0, system-configuration 0.7.0, system-configuration-sys 0.6.0, tar 0.4.46, tempfile 3.27.0, tendril 0.5.1, tinyvec 1.13.3, tray-icon 0.25.1, tzdata 2026.5, unicode-segmentation 1.13.3, url 2.5.8, utf8_iter 1.0.4, uuid 1.27.0, web_atoms 0.2.6, window-vibrancy 0.8.1, wry 0.57.0, xattr 1.6.1, zeroize 1.9.1
 
 ```text
 Apache License
@@ -652,7 +650,7 @@ Apache License
 
 ---
 
-**Gilt für:** @tauri-apps/api 2.12.2, anyhow 1.0.104, dtoa 1.0.11, dyn-clone 1.0.20, erased-serde 0.4.10, fdeflate 0.3.7, itoa 1.0.18, libc 0.2.190, miniz_oxide 0.8.9, miniz_oxide 0.9.1, num-conv 0.2.2, osakit 0.3.1, packaging 26.3, pin-project-lite 0.2.17, proc-macro2 1.0.107, quote 1.0.47, raw-window-handle 0.6.2, ref-cast 1.0.27, ref-cast-impl 1.0.27, rustc-hash 2.1.3, semver 1.0.28, serde 1.0.229, serde-untagged 0.1.9, serde_core 1.0.229, serde_derive 1.0.229, serde_derive_internals 0.29.1, serde_json 1.0.154, serde_repr 0.1.21, syn 2.0.119, syn 3.0.6, sync_wrapper 1.0.2, tauri 2.12.2, tauri-codegen 2.7.1, tauri-macros 2.7.1, tauri-plugin-dialog 2.8.3, tauri-plugin-fs 2.7.1, tauri-plugin-log 2.10.1, tauri-plugin-opener 2.7.2, tauri-plugin-process 2.4.0, tauri-plugin-updater 2.14.0, tauri-runtime 2.12.1, tauri-runtime-wry 2.12.1, tauri-utils 2.10.2, thiserror 2.0.21, thiserror-impl 2.0.21, time 0.3.55, time-core 0.1.9, time-macros 0.2.32, typeid 1.0.3, unicode-ident 1.0.26
+**Gilt für:** @tauri-apps/api 2.12.4, anyhow 1.0.104, dtoa 1.0.11, dyn-clone 1.0.20, erased-serde 0.4.10, fdeflate 0.3.7, itoa 1.0.18, libc 0.2.190, miniz_oxide 0.8.9, miniz_oxide 0.9.1, num-conv 0.2.2, osakit 0.3.1, packaging 26.3, pin-project-lite 0.2.17, proc-macro2 1.0.107, quote 1.0.47, raw-window-handle 0.6.2, ref-cast 1.0.27, ref-cast-impl 1.0.27, rustc-hash 2.1.3, semver 1.0.28, serde 1.0.229, serde-untagged 0.1.9, serde_core 1.0.229, serde_derive 1.0.229, serde_derive_internals 0.29.1, serde_json 1.0.154, serde_repr 0.1.21, syn 2.0.119, syn 3.0.6, sync_wrapper 1.0.2, tauri 2.12.2, tauri-codegen 2.7.1, tauri-macros 2.7.1, tauri-plugin-dialog 2.8.3, tauri-plugin-fs 2.7.1, tauri-plugin-log 2.10.1, tauri-plugin-opener 2.7.2, tauri-plugin-process 2.4.0, tauri-plugin-updater 2.14.0, tauri-runtime 2.12.1, tauri-runtime-wry 2.12.1, tauri-utils 2.10.2, thiserror 2.0.21, thiserror-impl 2.0.21, time 0.3.55, time-core 0.1.9, time-macros 0.2.32, typeid 1.0.3, unicode-ident 1.0.26
 
 ```text
 Apache License
@@ -1154,7 +1152,7 @@ Apache License
 
 ---
 
-**Gilt für:** @tauri-apps/api 2.12.2, tauri 2.12.2, tauri-codegen 2.7.1, tauri-macros 2.7.1, tauri-plugin-dialog 2.8.3, tauri-plugin-fs 2.7.1, tauri-plugin-log 2.10.1, tauri-plugin-opener 2.7.2, tauri-plugin-process 2.4.0, tauri-plugin-updater 2.14.0, tauri-runtime 2.12.1, tauri-runtime-wry 2.12.1, tauri-utils 2.10.2
+**Gilt für:** @tauri-apps/api 2.12.4, tauri 2.12.2, tauri-codegen 2.7.1, tauri-macros 2.7.1, tauri-plugin-dialog 2.8.3, tauri-plugin-fs 2.7.1, tauri-plugin-log 2.10.1, tauri-plugin-opener 2.7.2, tauri-plugin-process 2.4.0, tauri-plugin-updater 2.14.0, tauri-runtime 2.12.1, tauri-runtime-wry 2.12.1, tauri-utils 2.10.2
 
 ```text
 MIT License
@@ -1214,7 +1212,7 @@ DEALINGS IN THE SOFTWARE.
 
 ---
 
-**Gilt für:** @tauri-apps/plugin-dialog 2.8.1, @tauri-apps/plugin-opener 2.7.0, @tauri-apps/plugin-process 2.4.0, @tauri-apps/plugin-updater 2.13.1, tauri-plugin-dialog 2.8.3, tauri-plugin-fs 2.7.1, tauri-plugin-log 2.10.1, tauri-plugin-opener 2.7.2, tauri-plugin-process 2.4.0, tauri-plugin-updater 2.14.0
+**Gilt für:** @tauri-apps/plugin-dialog 2.8.3, @tauri-apps/plugin-opener 2.7.2, @tauri-apps/plugin-process 2.4.0, @tauri-apps/plugin-updater 2.14.0, tauri-plugin-dialog 2.8.3, tauri-plugin-fs 2.7.1, tauri-plugin-log 2.10.1, tauri-plugin-opener 2.7.2, tauri-plugin-process 2.4.0, tauri-plugin-updater 2.14.0
 
 ```text
 SPDXVersion: SPDX-2.1
@@ -2032,7 +2030,7 @@ Apache License
 
 ---
 
-**Gilt für:** cssparser 0.37.0, cssparser-macros 0.7.1, dompurify 3.4.16, dtoa-short 0.3.5, selectors 0.38.0
+**Gilt für:** cssparser 0.37.0, cssparser-macros 0.7.1, dompurify 3.4.17, dtoa-short 0.3.5, selectors 0.38.0
 
 ```text
 Mozilla Public License Version 2.0
@@ -2966,7 +2964,7 @@ DEALINGS IN THE SOFTWARE.
 
 ---
 
-**Gilt für:** react 19.3.0, react-dom 19.3.0, scheduler 0.28.0
+**Gilt für:** react 19.3.1, react-dom 19.3.1, scheduler 0.28.0
 
 ```text
 MIT License
@@ -4181,7 +4179,7 @@ SOFTWARE.
 
 ---
 
-**Gilt für:** @tauri-apps/api 2.12.2
+**Gilt für:** @tauri-apps/api 2.12.4
 
 ```text
 SPDXVersion: SPDX-2.1
@@ -7619,59 +7617,6 @@ THE SOFTWARE.
 
 ---
 
-**Gilt für:** httpcore 1.0.9
-
-```text
-Copyright © 2020, [Encode OSS Ltd](https://www.encode.io/).
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of the copyright holder nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-```
-
----
-
-**Gilt für:** httpx 0.28.1
-
-```text
-Copyright © 2019, [Encode OSS Ltd](https://www.encode.io/).
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-* Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-```
-
----
-
 **Gilt für:** hyper 1.12.0
 
 ```text
@@ -8634,7 +8579,7 @@ DEALINGS IN THE SOFTWARE.
 
 ---
 
-**Gilt für:** lucide-react 1.54.0
+**Gilt für:** lucide-react 1.62.0
 
 ```text
 ISC License
@@ -8913,7 +8858,7 @@ SOFTWARE.
 
 ---
 
-**Gilt für:** marked 18.1.0
+**Gilt für:** marked 18.1.2
 
 ```text
 # License information

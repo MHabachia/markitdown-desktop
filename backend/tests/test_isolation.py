@@ -49,6 +49,37 @@ class TestConversionPool(unittest.TestCase):
             pool.shutdown()
 
 
+class TestWorkerLifetime(unittest.TestCase):
+    def test_worker_is_replaced_after_its_job_limit(self):
+        pool = ConversionPool(size=1, worker_target=_workers.echo_worker, max_jobs=2)
+        try:
+            pool.convert("x", False, timeout=30)
+            first = pool._idle[0]
+            pool.convert("x", False, timeout=30)  # second job reaches the limit
+            self.assertEqual(pool._idle, [])
+            self.assertFalse(first.process.is_alive())
+            pool.convert("x", False, timeout=30)
+            self.assertIsNot(pool._idle[0], first)
+        finally:
+            pool.shutdown()
+
+    def test_idle_worker_is_ended(self):
+        pool = ConversionPool(size=1, worker_target=_workers.echo_worker, idle_timeout=0.4)
+        try:
+            pool.convert("x", False, timeout=30)
+            worker = pool._idle[0]
+            deadline = time.monotonic() + 10
+            while pool._idle and time.monotonic() < deadline:
+                time.sleep(0.1)
+            self.assertEqual(pool._idle, [])
+            worker.process.join(5)
+            self.assertFalse(worker.process.is_alive())
+            # the pool still works afterwards
+            self.assertEqual(pool.convert("x", False, timeout=30)[0], "ok")
+        finally:
+            pool.shutdown()
+
+
 class TestEngineTimeout(unittest.TestCase):
     def test_timeout_result_is_a_normal_failure(self):
         engine = ConversionEngine()

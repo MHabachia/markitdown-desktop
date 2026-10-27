@@ -54,7 +54,7 @@ Gebraucht werden Python 3.12, Node.js ab 22.12 und Rust.
 
 ```bash
 python3.12 -m venv .venv
-.venv/bin/pip install -r requirements-build.txt    # unter Windows: .venv\Scripts\pip
+.venv/bin/pip install -r requirements-build.txt -r requirements-dev.txt    # unter Windows: .venv\Scripts\pip
 npm install
 
 npm run tauri:dev     # App im Entwicklungsmodus
@@ -72,11 +72,12 @@ npx playwright install chromium && npm run test:e2e    # Ende-zu-Ende im Browser
 
 Einen fertigen Installer baut `npm run tauri:build:standalone`. Dabei wird das Python-Backend mit PyInstaller verpackt und in die App gelegt.
 
-Die Python-Pakete sind fest gepinnt. Die direkten Abhängigkeiten stehen in `requirements.in` und `requirements-build.in`, daraus erzeugt [uv](https://github.com/astral-sh/uv) die vollständigen Listen:
+Die Python-Pakete sind fest gepinnt. Die direkten Abhängigkeiten stehen in `requirements.in` (App), `requirements-build.in` (Installer-Build) und `requirements-dev.in` (nur Tests), daraus erzeugt [uv](https://github.com/astral-sh/uv) die vollständigen Listen:
 
 ```bash
 uv pip compile --universal --python-version 3.12 requirements.in -o requirements.txt
 uv pip compile --universal --python-version 3.12 requirements-build.in -o requirements-build.txt
+uv pip compile --universal --python-version 3.12 -c requirements.txt requirements-dev.in -o requirements-dev.txt
 ```
 
 ## Aufbau
@@ -104,6 +105,10 @@ Für eine neue Version: `npm run version:set -- 1.1.1` ausführen (setzt die Num
 Damit installierte Apps Updates annehmen, werden die Update-Pakete mit einem eigenen Schlüssel signiert. Er liegt als Secret `TAURI_SIGNING_PRIVATE_KEY` im Repository; der passende öffentliche Schlüssel steht in `src-tauri/tauri.conf.json`.
 
 Für Sicherheitslücken in Abhängigkeiten schlägt Dependabot Pull Requests vor. Normale Versionssprünge werden von Hand gemacht. Bei den Python-Paketen sollte man den Dependabot-PR nicht übernehmen, sondern die Liste mit den `uv`-Befehlen oben neu erzeugen: Dependabots Version ist nur für Linux gerechnet und würde die macOS- und Windows-Builds brechen. Sicherheitsmeldungen bitte wie in [SECURITY.md](SECURITY.md) beschrieben.
+
+## Mitmachen
+
+Fehler, Ideen und Pull Requests sind willkommen, siehe [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Lizenz
 

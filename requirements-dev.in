@@ -1,0 +1,3 @@
+# Only for running the tests; none of this goes into the app. FastAPI's TestClient needs httpx.
+#   uv pip compile --universal --python-version 3.12 --exclude-newer 2026-10-24 -c requirements.txt requirements-dev.in -o requirements-dev.txt
+httpx>=0.27.0

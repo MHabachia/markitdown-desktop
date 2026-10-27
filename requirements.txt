@@ -5,18 +5,13 @@ annotated-doc==0.0.5
 annotated-types==0.8.0
     # via pydantic
 anyio==4.15.1
-    # via
-    #   httpx
-    #   starlette
+    # via starlette
 beautifulsoup4==4.15.0
     # via
     #   markdownify
     #   markitdown
 certifi==2026.10.19
-    # via
-    #   httpcore
-    #   httpx
-    #   requests
+    # via requests
 cffi==2.1.1 ; platform_python_implementation != 'PyPy'
     # via cryptography
 charset-normalizer==3.5.2
@@ -47,17 +42,10 @@ fastapi==0.142.2
 flatbuffers==25.12.19
     # via onnxruntime
 h11==0.16.0
-    # via
-    #   httpcore
-    #   uvicorn
-httpcore==1.0.9
-    # via httpx
-httpx==0.28.1
-    # via -r requirements.in
+    # via uvicorn
 idna==3.20
     # via
     #   anyio
-    #   httpx
     #   requests
 lxml==6.1.3
     # via

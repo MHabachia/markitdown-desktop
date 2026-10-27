@@ -3,17 +3,22 @@ Runs conversions in separate worker processes so a stuck or crashing document ca
 stopped for real: a thread cannot be killed, a process can.
 
 Workers are started on demand, keep MarkItDown loaded between files and are replaced
-when one has to be killed (timeout) or dies.
+when one has to be killed (timeout) or dies. A worker that sits idle for a few minutes is
+ended, and one that has converted many files is replaced: the loaded models and long-running
+native libraries otherwise hold on to memory after a big batch.
 """
 
 import multiprocessing
 import threading
+import time
 import traceback
 from typing import Any, List, Optional, Tuple
 
 # Importing MarkItDown (and its models) takes a moment; this is not counted as conversion time.
 WORKER_START_TIMEOUT = 120.0
 MAX_WORKERS = 8
+IDLE_TIMEOUT = 300.0  # seconds without a job before a worker is ended
+MAX_JOBS_PER_WORKER = 50
 
 
 class ConversionTimeout(Exception):
@@ -66,6 +71,8 @@ class _Worker:
         self.process = ctx.Process(target=target, args=(child_conn,), daemon=True)
         self.process.start()
         child_conn.close()
+        self.jobs_done = 0
+        self.idle_since = time.monotonic()
         try:
             if not self.conn.poll(WORKER_START_TIMEOUT) or self.conn.recv() != ("ready",):
                 raise WorkerCrashed("Der Umwandlungsprozess ist nicht gestartet.")
@@ -92,11 +99,21 @@ class _Worker:
 
 
 class ConversionPool:
-    def __init__(self, size: int = MAX_WORKERS, worker_target=_worker_main) -> None:
+    def __init__(
+        self,
+        size: int = MAX_WORKERS,
+        worker_target=_worker_main,
+        idle_timeout: float = IDLE_TIMEOUT,
+        max_jobs: int = MAX_JOBS_PER_WORKER,
+    ) -> None:
         self._worker_target = worker_target
         self._slots = threading.Semaphore(size)
         self._idle: List[_Worker] = []
         self._lock = threading.Lock()
+        self._idle_timeout = idle_timeout
+        self._max_jobs = max_jobs
+        self._closed = threading.Event()
+        self._reaper: Optional[threading.Thread] = None
 
     def _take(self) -> _Worker:
         with self._lock:
@@ -108,8 +125,27 @@ class ConversionPool:
         return _Worker(self._worker_target)
 
     def _give_back(self, worker: _Worker) -> None:
+        worker.jobs_done += 1
+        if worker.jobs_done >= self._max_jobs:
+            worker.kill()
+            return
+        worker.idle_since = time.monotonic()
         with self._lock:
             self._idle.append(worker)
+            if self._reaper is None and not self._closed.is_set():
+                self._reaper = threading.Thread(target=self._reap_idle, name="worker-reaper", daemon=True)
+                self._reaper.start()
+
+    def _reap_idle(self) -> None:
+        """Ends workers that have been idle for too long, so their memory is given back."""
+        interval = max(0.05, min(30.0, self._idle_timeout / 4))
+        while not self._closed.wait(interval):
+            cutoff = time.monotonic() - self._idle_timeout
+            with self._lock:
+                expired = [w for w in self._idle if w.idle_since < cutoff]
+                self._idle = [w for w in self._idle if w.idle_since >= cutoff]
+            for worker in expired:
+                worker.kill()
 
     def convert(self, path: str, keep_data_uris: bool, timeout: float) -> Tuple[str, Optional[str], Optional[dict]]:
         """Returns (markdown, title, image_info for images or None). Raises ConversionTimeout, WorkerCrashed or RemoteError."""
@@ -134,6 +170,7 @@ class ConversionPool:
             raise RemoteError(message[1], message[2])
 
     def shutdown(self) -> None:
+        self._closed.set()
         with self._lock:
             workers, self._idle = self._idle, []
         for worker in workers:
