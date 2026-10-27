@@ -7,7 +7,6 @@ from backend.tests._isolation import TEST_BASE_URL  # noqa: F401  (must come fir
 import os
 import unittest
 import tempfile
-import pathlib
 
 from backend.system_info import get_system_diagnostics, get_format_capabilities
 from backend.engine import ConversionEngine

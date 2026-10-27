@@ -1,0 +1,6 @@
+# Python checks (run in CI): syntax errors, pyflakes (unused imports and names) and likely bugs (bugbear).
+target-version = "py312"
+extend-exclude = ["node_modules", "src-tauri", "dist", "build"]
+
+[lint]
+select = ["E9", "F", "B"]

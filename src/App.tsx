@@ -61,7 +61,7 @@ const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export const App: React.FC = () => {
   const { toasts, notify, dismiss } = useToasts();
-  const { settings, settingsRef, updateSettings } = useSettings();
+  const { settings, settingsRef, updateSettings } = useSettings(notify);
   const { update, checkForUpdate, installUpdate } = useUpdater(settings.check_updates);
   const { diagnostics, capabilities, unreachable: engineUnreachable, refresh: refreshSystemInfo } = useSystemInfo();
   const { history, reloadHistory, clearHistory, removeHistoryItem } = useHistory(notify);

@@ -1,7 +1,7 @@
 {
   "name": "markitdown-desktop",
   "productName": "MarkItDown Desktop",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Desktop-App, die Dokumente lokal mit Microsoft MarkItDown in Markdown umwandelt",
   "scripts": {
     "dev": "vite",

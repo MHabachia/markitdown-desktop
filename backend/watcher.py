@@ -46,7 +46,7 @@ class FolderWatcher:
             try:
                 os.makedirs(inbox_p, exist_ok=True)
             except Exception as e:
-                raise ValueError(f"Inbox-Verzeichnis konnte nicht erstellt werden: {e}")
+                raise ValueError(f"Inbox-Verzeichnis konnte nicht erstellt werden: {e}") from e
 
         if output_dir:
             output_dir = str(pathlib.Path(output_dir).expanduser())
@@ -56,7 +56,9 @@ class FolderWatcher:
 
         self.inbox_dir = str(inbox_p.resolve())
         self.output_dir = str(pathlib.Path(output_dir).resolve()) if output_dir else None
-        self._stop_event.clear()
+        # A fresh event per run: a loop that is still busy converting after stop() must not be
+        # revived by a later start() and end up running next to the new one.
+        self._stop_event = threading.Event()
         self.is_running = True
         self.processed_files = {}
         self.last_error = None
@@ -69,7 +71,9 @@ class FolderWatcher:
         except Exception:
             pass
 
-        self._thread = threading.Thread(target=self._watch_loop, daemon=True)
+        self._thread = threading.Thread(
+            target=self._watch_loop, args=(self._stop_event,), name="folder-watcher", daemon=True
+        )
         self._thread.start()
 
         return {
@@ -108,10 +112,10 @@ class FolderWatcher:
         stat = entry.stat()
         return stat.st_size, stat.st_mtime
 
-    def _watch_loop(self):
+    def _watch_loop(self, stop_event: threading.Event):
         supported_exts = self.supported_fn() if self.supported_fn else DEFAULT_EXTENSIONS
 
-        while not self._stop_event.is_set():
+        while not stop_event.is_set():
             try:
                 if not self.inbox_dir or not os.path.exists(self.inbox_dir):
                     time.sleep(1.0)
@@ -119,7 +123,7 @@ class FolderWatcher:
 
                 inbox_p = pathlib.Path(self.inbox_dir)
                 for entry in inbox_p.iterdir():
-                    if self._stop_event.is_set():
+                    if stop_event.is_set():
                         break
 
                     if not entry.is_file() or entry.name.startswith("."):

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiClient } from '../api/client';
 import { AppSettings, DEFAULT_SETTINGS } from '../types';
+import { Notify } from './useToasts';
 
 /**
  * App settings with optimistic updates. Changes are merged into the latest state (not a
  * stale render copy) and saved in order, so quick successive edits never overwrite each other.
  */
-export function useSettings() {
+export function useSettings(notify: Notify) {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const latest = useRef(settings);
   const saveChain = useRef<Promise<unknown>>(Promise.resolve());
@@ -27,8 +28,10 @@ export function useSettings() {
     const next = { ...latest.current, ...changes };
     latest.current = next;
     setSettings(next);
-    saveChain.current = saveChain.current.then(() => apiClient.saveSettings(next)).catch(() => undefined);
-  }, []);
+    saveChain.current = saveChain.current
+      .then(() => apiClient.saveSettings(next))
+      .catch((e) => notify(`Einstellungen konnten nicht gespeichert werden: ${e instanceof Error ? e.message : e}`, 'error'));
+  }, [notify]);
 
   return { settings, settingsRef: latest, updateSettings: update };
 }

@@ -4,6 +4,7 @@ from backend.tests._isolation import TEST_BASE_URL  # noqa: F401  (must come fir
 import os
 import pathlib
 import tempfile
+import threading
 import time
 import unittest
 
@@ -126,6 +127,36 @@ class TestWatcherFailures(unittest.TestCase):
             finally:
                 w.stop()
         self.assertEqual([os.path.basename(c) for c in calls], ["a.tsv"])
+
+
+class TestWatcherRestart(unittest.TestCase):
+    def test_restart_during_a_conversion_does_not_leave_two_loops(self):
+        started, release = threading.Event(), threading.Event()
+
+        def slow(src, out):
+            started.set()
+            release.wait(10)
+            return {"success": True}
+
+        def loops():
+            return [t for t in threading.enumerate() if t.name == "folder-watcher" and t.is_alive()]
+
+        with tempfile.TemporaryDirectory() as inbox:
+            w = FolderWatcher(convert_fn=slow)
+            w.start(inbox_dir=inbox)
+            try:
+                (pathlib.Path(inbox) / "a.txt").write_text("hallo")
+                self.assertTrue(started.wait(5), "the conversion never started")
+                w.stop()  # gives up waiting after 2 s: the loop is still inside the conversion
+                w.start(inbox_dir=inbox)
+                release.set()
+                deadline = time.time() + 5
+                while len(loops()) > 1 and time.time() < deadline:
+                    time.sleep(0.1)
+                self.assertEqual(len(loops()), 1)
+            finally:
+                release.set()
+                w.stop()
 
 
 class TestEmptyResults(unittest.TestCase):

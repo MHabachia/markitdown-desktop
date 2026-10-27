@@ -311,5 +311,53 @@ class TestApiToken(unittest.TestCase):
         finally:
             api_module.API_TOKEN = original
 
+class TestStoreFailures(unittest.TestCase):
+    """History and settings must not lose data silently or report a save that did not happen."""
+
+    def setUp(self):
+        from backend import api as api_module
+        self.api = api_module
+        self.client = TestClient(app, base_url=TEST_BASE_URL)
+        self.tmp = tempfile.mkdtemp()
+        self.saved_paths = (api_module.HISTORY_FILE, api_module.SETTINGS_FILE)
+
+    def tearDown(self):
+        self.api.HISTORY_FILE, self.api.SETTINGS_FILE = self.saved_paths
+
+    def test_unreadable_history_is_moved_aside_not_overwritten(self):
+        path = os.path.join(self.tmp, "history.json")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write('[{"id": "hist_1", ')  # cut off, e.g. by a crash
+        self.api.HISTORY_FILE = path
+        self.assertEqual(self.client.get("/api/history").json(), [])
+        self.api.append_history({"id": "hist_2"})
+        self.assertTrue(os.path.exists(path + ".corrupt"))
+        with open(path + ".corrupt", encoding="utf-8") as f:
+            self.assertIn("hist_1", f.read())
+        self.assertEqual([item["id"] for item in self.client.get("/api/history").json()], ["hist_2"])
+
+    def test_history_with_wrong_shape_is_treated_as_unreadable(self):
+        path = os.path.join(self.tmp, "history.json")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write('{"not": "a list"}')
+        self.api.HISTORY_FILE = path
+        self.assertEqual(self.client.get("/api/history").json(), [])
+        self.assertTrue(os.path.exists(path + ".corrupt"))
+
+    def test_settings_save_failure_is_reported(self):
+        self.api.SETTINGS_FILE = os.path.join(self.tmp, "missing-folder", "settings.json")
+        res = self.client.post("/api/settings", json=self.api.SettingsModel().model_dump())
+        self.assertEqual(res.status_code, 500)
+        self.assertIn("Einstellungen", res.json()["detail"])
+
+    def test_history_write_failure_does_not_break_a_conversion(self):
+        self.api.HISTORY_FILE = os.path.join(self.tmp, "missing-folder", "history.json")
+        src = os.path.join(self.tmp, "note.txt")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write("Hallo")
+        res = self.client.post("/api/convert", json={"source_path": src, "save": False})
+        self.assertTrue(res.json()["success"])
+        self.assertEqual(self.client.delete("/api/history").status_code, 500)
+
 if __name__ == "__main__":
     unittest.main()

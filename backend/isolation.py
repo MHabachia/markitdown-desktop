@@ -69,9 +69,9 @@ class _Worker:
         try:
             if not self.conn.poll(WORKER_START_TIMEOUT) or self.conn.recv() != ("ready",):
                 raise WorkerCrashed("Der Umwandlungsprozess ist nicht gestartet.")
-        except (EOFError, OSError):
+        except (EOFError, OSError) as e:
             self.kill()
-            raise WorkerCrashed("Der Umwandlungsprozess ist beim Start beendet worden.")
+            raise WorkerCrashed("Der Umwandlungsprozess ist beim Start beendet worden.") from e
         except WorkerCrashed:
             self.kill()
             raise
@@ -125,7 +125,7 @@ class ConversionPool:
                 raise
             except (EOFError, OSError) as e:
                 worker.kill()
-                raise WorkerCrashed(f"Der Umwandlungsprozess wurde unerwartet beendet ({type(e).__name__}).")
+                raise WorkerCrashed(f"Der Umwandlungsprozess wurde unerwartet beendet ({type(e).__name__}).") from e
 
             if message[0] == "ok":
                 self._give_back(worker)

@@ -8,7 +8,6 @@ import sys
 import importlib
 import importlib.util
 import platform
-import os
 from typing import Dict, Any, List
 
 # Import names for packages whose module name differs from the distribution name.

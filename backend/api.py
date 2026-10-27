@@ -111,23 +111,47 @@ _store_lock = threading.RLock()
 
 
 def load_json_store(filepath: str, default_val: Any) -> Any:
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return default_val
+    """Reads a JSON store. A file that cannot be parsed is moved aside (`.corrupt`) instead of
+    being overwritten by the next save, so the user's data is not silently lost."""
+    if not os.path.exists(filepath):
+        return default_val
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, type(default_val)):
+            return data
+    except OSError:
+        return default_val
+    except ValueError:
+        pass
+    try:
+        os.replace(filepath, f"{filepath}.corrupt")
+        print(f"[Warning] {filepath} was unreadable and was moved to {filepath}.corrupt")
+    except OSError as e:
+        print(f"[Warning] Could not move aside {filepath}: {e}")
     return default_val
 
 
-def save_json_store(filepath: str, data: Any):
+def save_json_store(filepath: str, data: Any) -> None:
+    """Atomically replaces a JSON store. Raises OSError if it cannot be written."""
+    temp_file = f"{filepath}.{uuid.uuid4().hex}.tmp"
     try:
-        temp_file = f"{filepath}.{uuid.uuid4().hex}.tmp"
         with open(temp_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         os.replace(temp_file, filepath)
-    except Exception as e:
-        print(f"[Error] Failed to save {filepath}: {e}")
+    except Exception:
+        try:
+            os.remove(temp_file)
+        except OSError:
+            pass
+        raise
+
+
+def save_store_or_500(filepath: str, data: Any, what: str) -> None:
+    try:
+        save_json_store(filepath, data)
+    except OSError as e:
+        raise HTTPException(status_code=500, detail=f"{what} konnte nicht gespeichert werden: {e}") from e
 
 
 def migrate_legacy_data() -> None:
@@ -179,7 +203,11 @@ def append_history(entry: Dict[str, Any]):
     with _store_lock:
         history = load_json_store(HISTORY_FILE, [])
         history.insert(0, entry)
-        save_json_store(HISTORY_FILE, history[:500])
+        try:
+            save_json_store(HISTORY_FILE, history[:500])
+        except OSError as e:
+            # The conversion itself succeeded; a missing history line must not turn it into an error.
+            print(f"[Error] Failed to save the history: {e}")
 
 
 def make_history_entry(res: Dict[str, Any], source_path: str, source_name: str) -> Dict[str, Any]:
@@ -316,8 +344,8 @@ def convert_single(req: ConvertRequest):
             raise HTTPException(status_code=413, detail="Upload ist zu groß.")
         try:
             payload = base64.b64decode(raw_b64, validate=False)
-        except (binascii.Error, ValueError):
-            raise HTTPException(status_code=400, detail="file_base64 ist kein gültiges Base64.")
+        except (binascii.Error, ValueError) as e:
+            raise HTTPException(status_code=400, detail="file_base64 ist kein gültiges Base64.") from e
 
         # Each upload gets its own directory and a sanitised name: no traversal, no clobbering.
         fname = safe_filename(req.file_name)
@@ -402,7 +430,7 @@ def save_markdown(req: SaveMarkdownRequest):
                 filename_template=req.filename_template
             )
         except FileExistsError as e:
-            raise HTTPException(status_code=409, detail=str(e))
+            raise HTTPException(status_code=409, detail=str(e)) from e
 
     if result.get("saved"):
         name = req.file_name or os.path.basename(req.source_path or result["target_path"])
@@ -463,7 +491,7 @@ def save_file(req: SaveFileRequest):
             "size": p.stat().st_size
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fehler beim Speichern der Datei: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Fehler beim Speichern der Datei: {str(e)}") from e
 
 def _open_with_os(target: str):
     if platform.system() == "Windows":
@@ -484,7 +512,7 @@ def open_folder(req: OpenPathRequest):
         _open_with_os(folder)
         return {"success": True, "opened": folder}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ordner konnte nicht geöffnet werden: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Ordner konnte nicht geöffnet werden: {str(e)}") from e
 
 @app.post("/api/open-file")
 def open_file(req: OpenPathRequest):
@@ -498,7 +526,7 @@ def open_file(req: OpenPathRequest):
         _open_with_os(path)
         return {"success": True, "opened": path}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Datei konnte nicht im Standardprogramm geöffnet werden: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Datei konnte nicht im Standardprogramm geöffnet werden: {str(e)}") from e
 
 @app.post("/api/generate-samples")
 def create_samples():
@@ -506,7 +534,7 @@ def create_samples():
     samples_dir = ensure_samples_dir(os.path.join(DATA_DIR, "samples"))
     files_dict = generate_sample_files(samples_dir)
     file_items = []
-    for key, fpath in files_dict.items():
+    for fpath in files_dict.values():
         p = pathlib.Path(fpath)
         if p.exists():
             stat = p.stat()
@@ -530,7 +558,7 @@ def get_history():
 @app.delete("/api/history")
 def clear_history():
     with _store_lock:
-        save_json_store(HISTORY_FILE, [])
+        save_store_or_500(HISTORY_FILE, [], "Der Verlauf")
     return {"success": True}
 
 @app.delete("/api/history/{item_id}")
@@ -538,7 +566,7 @@ def delete_history_item(item_id: str):
     with _store_lock:
         history = load_json_store(HISTORY_FILE, [])
         updated = [item for item in history if item.get("id") != item_id]
-        save_json_store(HISTORY_FILE, updated)
+        save_store_or_500(HISTORY_FILE, updated, "Der Verlauf")
     return {"success": True}
 
 @app.get("/api/settings")
@@ -549,7 +577,7 @@ def get_settings():
 def update_settings(settings: SettingsModel):
     data = settings.model_dump()
     with _store_lock:
-        save_json_store(SETTINGS_FILE, data)
+        save_store_or_500(SETTINGS_FILE, data, "Die Einstellungen")
     return data
 
 class ExportZipRequest(BaseModel):
@@ -600,7 +628,7 @@ def start_watcher(req: WatcherStartRequest):
         res = watcher.start(inbox_dir=req.inbox_dir, output_dir=req.output_dir)
         return res
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 @app.post("/api/watcher/stop")
 def stop_watcher():
